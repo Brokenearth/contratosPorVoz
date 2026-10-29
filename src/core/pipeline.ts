@@ -1,7 +1,7 @@
 import { mergeFields, missingFields, questionFor } from "./dialog";
 import { tokenize } from "./lexer";
 import { parseContract, type ParseOutcome } from "./parser";
-import { extractedFieldNames, getTemplate, TEMPLATES, toValueMap } from "./templates";
+import { contractValues, extractedFieldNames, getTemplate, TEMPLATES } from "./templates";
 import { fillTemplate, selectTemplate } from "./turing";
 import type { ContractFields, LexResult, SelectionResult, TemplateDef, TuringRun } from "./types";
 
@@ -44,11 +44,8 @@ export function runPipeline(
   const missing = template ? missingFields(fields, template.required) : [];
   const question = template ? questionFor(missing) : NO_TEMPLATE_QUESTION;
   const ready = template !== null && (missing.length === 0 || options.force === true);
-  const contract = ready ? fillTemplate(template.body, toValueMap(fields)).run : null;
-  const errors = [
-    ...lex.errors.map((e) => `${e.message} en la posición ${e.position}.`),
-    ...parse.errors,
-  ];
+  const contract = ready ? fillTemplate(template.body, contractValues(fields)).run : null;
+  const errors = [...lex.errors.map((e) => `${e.message} en la posición ${e.position}.`), ...parse.errors];
   return { lex, parse, fields, selection, template, missing, question, contract, errors };
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fillTemplate } from "../turing/fill";
-import { extractedFieldNames, formatMoney, toValueMap } from "./format";
+import { extractedFieldNames, formatMoney, toValueMap, contractValues } from "./format";
 import { getTemplate, parseTemplate, TEMPLATES } from "./index";
 import type { ContractFields } from "../types";
 
@@ -139,7 +139,7 @@ describe("toValueMap", () => {
 
 describe("§6 example end to end", () => {
   it("produces the CLÁUSULA SEGUNDA of the proposal", () => {
-    const result = fillTemplate(getTemplate("PASTOREO").body, toValueMap(exampleFields));
+    const result = fillTemplate(getTemplate("PASTOREO").body, contractValues(exampleFields));
     expect(result.run.accepted).toBe(true);
     expect(result.run.output).toContain(
       "CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote La Esperanza (5 hectáreas) un máximo de 20 vacas de raza Holstein, destinadas exclusivamente a la producción de leche, durante 12 meses.",

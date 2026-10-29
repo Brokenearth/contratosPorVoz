@@ -162,3 +162,11 @@ function joinSpanish(list: string[]): string {
   if (list.length <= 1) return list.join("");
   return `${list.slice(0, -1).join(", ")} y ${list.at(-1) ?? ""}`;
 }
+
+/** Party names are optional when dictating; the draft leaves a line to fill in by hand. */
+const BLANK_NAME = "____________________";
+
+/** Values for the fill machine: the extracted data plus blank lines for unnamed parties. */
+export function contractValues(fields: ContractFields): ValueMap {
+  return { arrendador: BLANK_NAME, arrendatario: BLANK_NAME, ...toValueMap(fields) };
+}

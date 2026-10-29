@@ -13,7 +13,7 @@
 
 ## Partes
 
-Entre los suscritos, mayor de edad, quien en adelante se denominará el ARRENDADOR, y mayor de edad, quien en adelante se denominará el ARRENDATARIO, se celebra el presente contrato de arrendamiento de lote rural para pastoreo, que se regirá por las siguientes cláusulas.
+Entre los suscritos, ____________________, mayor de edad, quien en adelante se denominará el ARRENDADOR, y ____________________, mayor de edad, quien en adelante se denominará el ARRENDATARIO, se celebra el presente contrato de arrendamiento de lote rural para pastoreo, que se regirá por las siguientes cláusulas.
 
 ## Objeto
 
@@ -54,5 +54,5 @@ Para constancia se firma en dos ejemplares del mismo tenor.
 | EL ARRENDADOR | EL ARRENDATARIO |
 | --- | --- |
 | ______________________________ | ______________________________ |
-|  |  |
+| ____________________ | ____________________ |
 | C.C. ____________________ | C.C. ____________________ |

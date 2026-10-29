@@ -10,7 +10,7 @@ opcionales: arrendador, arrendatario, animales_descripcion
 
 ## Partes
 
-Entre los suscritos, [[?arrendador]]{{arrendador}}, [[/arrendador]]mayor de edad, quien en adelante se denominará el ARRENDADOR, y [[?arrendatario]]{{arrendatario}}, [[/arrendatario]]mayor de edad, quien en adelante se denominará el ARRENDATARIO, se celebra el presente contrato de arrendamiento de lote rural para pastoreo, que se regirá por las siguientes cláusulas.
+Entre los suscritos, {{arrendador}}, mayor de edad, quien en adelante se denominará el ARRENDADOR, y {{arrendatario}}, mayor de edad, quien en adelante se denominará el ARRENDATARIO, se celebra el presente contrato de arrendamiento de lote rural para pastoreo, que se regirá por las siguientes cláusulas.
 
 ## Objeto
 
@@ -51,5 +51,5 @@ Para constancia se firma en dos ejemplares del mismo tenor.
 | EL ARRENDADOR | EL ARRENDATARIO |
 | --- | --- |
 | ______________________________ | ______________________________ |
-| [[?arrendador]]{{arrendador}}[[/arrendador]] | [[?arrendatario]]{{arrendatario}}[[/arrendatario]] |
+| {{arrendador}} | {{arrendatario}} |
 | C.C. ____________________ | C.C. ____________________ |

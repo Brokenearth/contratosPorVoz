@@ -16,21 +16,61 @@ const animals = (f: ContractFields) => [...(f.animales ?? []), ...(f.animales ??
 
 /** Known field keys (accents ignored). Unknown keys fall back to the key itself. */
 const FIELDS: Record<string, FieldInfo> = {
-  animal: { guide: "Tipo de animal (y raza, si aplica)", question: "el tipo de animal", isPresent: (f) => animals(f).length > 0 },
-  cantidad: { guide: "cantidad de animales", question: "la cantidad de animales", isPresent: (f) => animals(f).some((a) => a.cantidad !== undefined) },
-  tipo_animal: { guide: "Tipo de animal (y raza, si aplica)", question: "el tipo de animal", isPresent: (f) => animals(f).length > 0 },
-  cantidad_animales: { guide: "Cantidad de animales", question: "la cantidad de animales", isPresent: (f) => animals(f).some((a) => a.cantidad !== undefined) },
+  animal: {
+    guide: "Tipo de animal (y raza, si aplica)",
+    question: "el tipo de animal",
+    isPresent: (f) => animals(f).length > 0,
+  },
+  cantidad: {
+    guide: "cantidad de animales",
+    question: "la cantidad de animales",
+    isPresent: (f) => animals(f).some((a) => a.cantidad !== undefined),
+  },
+  tipo_animal: {
+    guide: "Tipo de animal (y raza, si aplica)",
+    question: "el tipo de animal",
+    isPresent: (f) => animals(f).length > 0,
+  },
+  cantidad_animales: {
+    guide: "Cantidad de animales",
+    question: "la cantidad de animales",
+    isPresent: (f) => animals(f).some((a) => a.cantidad !== undefined),
+  },
   raza: { guide: "raza", question: "la raza", isPresent: (f) => animals(f).some((a) => a.raza !== undefined) },
   lote: { guide: "Número de lote", question: "el número o nombre del lote", isPresent: (f) => f.lote !== undefined },
-  hectareas: { guide: "hectáreas del lote", question: "las hectáreas del lote", isPresent: (f) => f.hectareas !== undefined },
+  hectareas: {
+    guide: "hectáreas del lote",
+    question: "las hectáreas del lote",
+    isPresent: (f) => f.hectareas !== undefined,
+  },
   fecha: { guide: "Fecha", question: "la fecha", isPresent: (f) => f.fecha !== undefined },
-  valor: { guide: "Valor del arrendamiento", question: "el valor del arrendamiento", isPresent: (f) => f.valor !== undefined },
-  uso: { guide: "Para qué se usará (uso)", question: "para qué se usará el lote", isPresent: (f) => f.uso !== undefined },
+  valor: {
+    guide: "Valor del arrendamiento",
+    question: "el valor del arrendamiento",
+    isPresent: (f) => f.valor !== undefined,
+  },
+  uso: {
+    guide: "Para qué se usará (uso)",
+    question: "para qué se usará el lote",
+    isPresent: (f) => f.uso !== undefined,
+  },
   duracion: { guide: "duración", question: "la duración", isPresent: (f) => f.duracion !== undefined },
   cultivo: { guide: "Cultivo", question: "el cultivo", isPresent: (f) => f.cultivo !== undefined },
-  insumos: { guide: "quién aporta los insumos", question: "quién aporta los insumos", isPresent: (f) => f.insumos !== undefined },
-  arrendador: { guide: "Nombre del arrendador", question: "el nombre del arrendador", isPresent: (f) => f.arrendador !== undefined },
-  arrendatario: { guide: "Nombre del arrendatario", question: "el nombre del arrendatario", isPresent: (f) => f.arrendatario !== undefined },
+  insumos: {
+    guide: "quién aporta los insumos",
+    question: "quién aporta los insumos",
+    isPresent: (f) => f.insumos !== undefined,
+  },
+  arrendador: {
+    guide: "Nombre del arrendador",
+    question: "el nombre del arrendador",
+    isPresent: (f) => f.arrendador !== undefined,
+  },
+  arrendatario: {
+    guide: "Nombre del arrendatario",
+    question: "el nombre del arrendatario",
+    isPresent: (f) => f.arrendatario !== undefined,
+  },
 };
 
 function infoOf(key: string): FieldInfo | undefined {
@@ -46,12 +86,16 @@ function joinSpanish(parts: string[]): string {
 /** Initial guide (proposal §5.6) built from the template declaration. */
 export function guideText(declaration: FieldDeclaration): string {
   const lines = ["Para redactar su contrato, mencione:"];
-  for (const key of declaration.required) lines.push(`✔ ${infoOf(key)?.guide ?? key}`);
+  for (const key of declaration.required) lines.push(`✔ ${capitalize(infoOf(key)?.guide ?? key)}`);
   if (declaration.optional.length > 0) {
     lines.push(`Opcional: ${declaration.optional.map((k) => (infoOf(k)?.guide ?? k).toLowerCase()).join(", ")}`);
   }
   lines.push("Puede decirlo en el orden que prefiera.");
   return lines.join("\n");
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /** Required keys that are not present in `fields`, in declaration order. */

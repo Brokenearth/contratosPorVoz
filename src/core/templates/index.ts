@@ -4,7 +4,7 @@ import mixta from "./mixta.md?raw";
 import pastoreo from "./pastoreo.md?raw";
 import { parseTemplate } from "./parse";
 
-export { extractedFieldNames, formatDate, formatDuration, formatMoney, toValueMap, type ValueMap } from "./format";
+export { contractValues, extractedFieldNames, formatDate, formatDuration, formatMoney, toValueMap, type ValueMap } from "./format";
 export { parseTemplate } from "./parse";
 
 /** All available templates, in preference order (used to break ties). */
