@@ -410,8 +410,7 @@ export function generateDocs(): GeneratedDocs {
     "afd-num": automatonSection("AFD de NUM (subconjuntos)", num.dfa, num.dfa),
     "afd-num-min": automatonSection("AFD mínimo de NUM", minimize(num.dfa)),
     "afd-animal": [
-      `AFN-λ de Thompson: ${animal.nfa.states.length} estados y ${animal.nfa.transitions.length} transiciones ` +
-        "(tabla completa en `docs/automatas.md`).",
+      automatonSection(`AFN-λ de ${PROPOSAL_ANIMAL} (Thompson)`, animal.nfa),
       automatonSection(`AFD de ${PROPOSAL_ANIMAL} (subconjuntos)`, animal.dfa, animal.dfa),
       automatonSection("AFD mínimo", minimize(animal.dfa)),
     ].join("\n\n"),
