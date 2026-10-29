@@ -20,8 +20,10 @@ describe("selectTemplate", () => {
   });
 
   it("flags a tie when two templates reach the same proportion", () => {
-    // PASTOREO 4/8 and CULTIVO 3/6 are both 50 %
-    const result = selectTemplate(["lote", "hectareas", "duracion", "tipo_animal"], TEMPLATES);
+    // A: 1/2 and B: 2/4 are both 50 %
+    const a = { ...getTemplate("PASTOREO"), id: "PASTOREO" as const, required: ["lote", "uso"] };
+    const b = { ...getTemplate("CULTIVO"), id: "CULTIVO" as const, required: ["lote", "valor", "cultivo", "fecha"] };
+    const result = selectTemplate(["lote", "valor"], [a, b]);
     expect(result.tie).toBe(true);
   });
 
@@ -32,9 +34,9 @@ describe("selectTemplate", () => {
   });
 
   it("chooses CULTIVO for a crop dictation", () => {
-    const result = selectTemplate(["lote", "hectareas", "cultivo", "insumos", "duracion", "valor"], TEMPLATES);
+    const result = selectTemplate(["lote", "hectareas", "cultivo", "insumos", "fecha", "duracion", "valor"], TEMPLATES);
     expect(result.templateId).toBe("CULTIVO");
-    expect(result.scores.CULTIVO).toEqual({ matched: 6, total: 6 });
+    expect(result.scores.CULTIVO).toEqual({ matched: 7, total: 7 });
   });
 
   it("flags a low match when the best proportion is under 50 %", () => {

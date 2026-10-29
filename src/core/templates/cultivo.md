@@ -1,8 +1,8 @@
 ---
 id: CULTIVO
 titulo: Contrato de arrendamiento de lote para cultivo
-requeridos: lote, hectareas, cultivo, insumos, duracion, valor
-opcionales: fecha, arrendador, arrendatario
+requeridos: lote, hectareas, cultivo, insumos, fecha, duracion, valor
+opcionales: arrendador, arrendatario
 ---
 # CONTRATO DE ARRENDAMIENTO DE LOTE PARA CULTIVO
 

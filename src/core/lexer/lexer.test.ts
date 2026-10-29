@@ -76,7 +76,7 @@ describe("tokenize — proposal §6 example sentence", () => {
       "PALABRA_CLAVE:raza",
       "RAZA:holstein",
       "PALABRA_CLAVE:para",
-      "PALABRA_CLAVE:produccion",
+      "USO:producción",
       "PALABRA_CLAVE:de",
       "USO:leche",
       "PALABRA_CLAVE:por",

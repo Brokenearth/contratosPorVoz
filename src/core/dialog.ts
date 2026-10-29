@@ -18,6 +18,8 @@ const animals = (f: ContractFields) => [...(f.animales ?? []), ...(f.animales ??
 const FIELDS: Record<string, FieldInfo> = {
   animal: { guide: "Tipo de animal (y raza, si aplica)", question: "el tipo de animal", isPresent: (f) => animals(f).length > 0 },
   cantidad: { guide: "cantidad de animales", question: "la cantidad de animales", isPresent: (f) => animals(f).some((a) => a.cantidad !== undefined) },
+  tipo_animal: { guide: "Tipo de animal (y raza, si aplica)", question: "el tipo de animal", isPresent: (f) => animals(f).length > 0 },
+  cantidad_animales: { guide: "Cantidad de animales", question: "la cantidad de animales", isPresent: (f) => animals(f).some((a) => a.cantidad !== undefined) },
   raza: { guide: "raza", question: "la raza", isPresent: (f) => animals(f).some((a) => a.raza !== undefined) },
   lote: { guide: "Número de lote", question: "el número o nombre del lote", isPresent: (f) => f.lote !== undefined },
   hectareas: { guide: "hectáreas del lote", question: "las hectáreas del lote", isPresent: (f) => f.hectareas !== undefined },

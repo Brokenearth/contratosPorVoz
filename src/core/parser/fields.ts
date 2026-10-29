@@ -6,6 +6,9 @@ const MONTHS = [
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 ];
 
+/** Uses that only say "a crop goes here" (the crop is a separate field). */
+const CROP_USES = ["cultivo", "siembra", "agricultura"];
+
 /** All tokens under `node`, left to right. */
 function leaves(node: ParseTree): Token[] {
   if (node.token) return [node.token];
@@ -63,7 +66,9 @@ function amount(monto: ParseTree): { monto: number; moneda: string } {
   let value = tokens[0] ? num(tokens[0]) : 0;
   let currency = "pesos";
   for (const t of tokens.slice(1)) {
-    if (normalize(t.lexeme).startsWith("millon")) value *= 1_000_000;
+    const word = normalize(t.lexeme);
+    if (word.startsWith("millon")) value *= 1_000_000;
+    else if (word === "mil") value *= 1_000;
     else currency = text(t);
   }
   return { monto: value, moneda: currency };
@@ -98,9 +103,13 @@ function visit(node: ParseTree, fields: ContractFields): void {
     case "DURACION":
       if (tokens[1] && tokens[2]) fields.duracion = { cantidad: num(tokens[1]), unidad: text(tokens[2]) };
       return;
-    case "USO":
-      fields.uso = tokens.filter((t) => t.type === "USO").map(text).join(" de ");
+    case "USO": {
+      const uso = tokens.filter((t) => t.type === "USO").map(text).join(" de ");
+      // In a mixed dictation ("para ganadería de leche y para cultivo de maíz") the crop use must not
+      // replace the livestock use: the crop itself goes to `cultivo`.
+      if (fields.uso === undefined || !CROP_USES.includes(normalize(uso))) fields.uso = uso;
       return;
+    }
     case "CULTIVO": {
       const crop = tokens[tokens.length - 1];
       if (crop) fields.cultivo = text(crop);

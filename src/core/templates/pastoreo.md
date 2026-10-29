@@ -1,8 +1,8 @@
 ---
 id: PASTOREO
 titulo: Contrato de arrendamiento de lote para pastoreo
-requeridos: lote, hectareas, tipo_animal, cantidad_animales, raza, uso, duracion, valor
-opcionales: fecha, arrendador, arrendatario, animales_descripcion
+requeridos: lote, hectareas, tipo_animal, cantidad_animales, raza, fecha, uso, duracion, valor
+opcionales: arrendador, arrendatario, animales_descripcion
 ---
 # CONTRATO DE ARRENDAMIENTO DE LOTE PARA PASTOREO
 

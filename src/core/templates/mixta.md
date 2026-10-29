@@ -1,8 +1,8 @@
 ---
 id: MIXTA
 titulo: Contrato de arrendamiento mixto de lote (pastoreo y cultivo)
-requeridos: lote, hectareas, tipo_animal, cantidad_animales, raza, uso, cultivo, insumos, duracion, valor
-opcionales: fecha, arrendador, arrendatario, animales_descripcion
+requeridos: lote, hectareas, tipo_animal, cantidad_animales, raza, fecha, uso, cultivo, insumos, duracion, valor
+opcionales: arrendador, arrendatario, animales_descripcion
 ---
 # CONTRATO DE ARRENDAMIENTO MIXTO DE LOTE (PASTOREO Y CULTIVO)
 

@@ -139,7 +139,7 @@ export const TOKEN_DEFINITIONS: readonly TokenDefinition[] = [
   ),
   fromWords("USO", "USO", [
     ...forms("", "pastoreo", "ganadería", "cultivo", "siembra", "leche", "carne", "ceba", "cría", "engorde"),
-    ...forms("", "levante", "agricultura"),
+    ...forms("", "levante", "agricultura", "producción"),
   ]),
   fromWords("CULTIVO", "CULTIVO", [
     ...forms("s", "papa", "yuca", "plátano", "arveja", "tomate", "cebolla", "aguacate", "naranja", "mango"),
@@ -152,7 +152,7 @@ export const TOKEN_DEFINITIONS: readonly TokenDefinition[] = [
     ...fromWords("PALABRA_CLAVE", "PALABRA_CLAVE", [
       ...forms("s", "lote"),
       ...forms("", "en", "el", "la", "los", "las", "de", "del", "al", "a", "raza", "por", "para", "un", "una"),
-      ...forms("", "valor", "desde", "hasta", "durante", "con", "se", "cuales", "fin", "producción"),
+      ...forms("", "valor", "desde", "hasta", "durante", "con", "se", "cuales", "fin"),
       ...forms("", "arrendador", "arrendadora", "arrendatario", "arrendataria", "aporta", "aportan", "aporte"),
     ]),
     value: (normalized) => normalized,
