@@ -23,7 +23,7 @@ export interface PipelineResult {
   question: string;
   /** Fill-machine run; null until the required fields are complete (or `force`). */
   contract: TuringRun | null;
-  /** Lexical and syntax errors as readable messages. */
+  /** Lexical and syntax errors, plus words skipped by the parser's error recovery, as readable messages. */
   errors: string[];
 }
 
@@ -45,7 +45,11 @@ export function runPipeline(
   const question = template ? questionFor(missing) : NO_TEMPLATE_QUESTION;
   const ready = template !== null && (missing.length === 0 || options.force === true);
   const contract = ready ? fillTemplate(template.body, contractValues(fields)).run : null;
-  const errors = [...lex.errors.map((e) => `${e.message} en la posición ${e.position}.`), ...parse.errors];
+  const errors = [
+    ...lex.errors.map((e) => `${e.message} en la posición ${e.position}.`),
+    ...parse.errors,
+    ...parse.warnings,
+  ];
   return { lex, parse, fields, selection, template, missing, question, contract, errors };
 }
 

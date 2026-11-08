@@ -701,6 +701,36 @@ La fecha no es un token: es una construcción sintáctica (`FECHA`) formada por 
 MES: AFN-λ de 174 estados → AFD de 80 estados → AFD mínimo de 38 estados (completos en `docs/automatas.md`).
 <!-- /gen:afd-mes -->
 
+### 4.5 Diccionario de sinónimos
+
+Una misma condición se dicta de muchas formas ("a partir del", "contado desde el", "desde el"). Para
+no inflar la gramática con cada variante, el léxico tiene una segunda fase: después de que los AFD
+producen los tokens, un **diccionario** (`src/core/lexer/synonyms.ts`) busca frases completas y las
+reescribe a su **forma canónica**, la única que conoce la gramática. Ejemplos:
+
+| Forma canónica | Frases equivalentes |
+| --- | --- |
+| `desde el` | a partir del, contado desde el, a contar del, comenzando el |
+| `por` (duración) | por un período de, por un plazo de, por el término de, durante |
+| `por un valor de` | por la suma de, por un canon de, por un precio de, por valor de |
+| `lote` | finca, parcela, hacienda, predio, potrero, terreno, lote denominado, lote llamado |
+| `de` (área) | con una extensión de, con un área de |
+| `para` | destinado al mantenimiento de, destinado a, con destino a |
+| `arrendador` / `arrendatario` | propietario, dueño / inquilino |
+| `vacas` | reses, vacunos, bovinos, cabezas de ganado |
+| _(se descarta)_ | aproximadamente, más o menos, cerca de, unas, unos |
+
+- La comparación es por **tokens completos** y gana la frase más larga ("por un plazo de" antes que
+  "por").
+- Los tokens canónicos se obtienen pasando la forma canónica por los mismos AFD, así que el
+  diccionario no reconoce nada por su cuenta.
+- Cada token reescrito conserva la posición de las palabras originales y las guarda en `synonymOf`.
+  La pestaña _Tokens_ lo muestra como "desde (sinónimo de "a partir del")".
+- Las reescrituras se encadenan hasta un punto fijo, con máximo 3 pasadas: "la finca denominada El
+  Roble" → "el lote denominada El Roble" → "el lote El Roble".
+- El signo `$` antes de un monto se ignora como puntuación. Los montos en cifras ("6.000.000 de
+  pesos") los acepta la regla `MONTO → num "de" moneda`.
+
 ## 5. Gramática completa
 
 Notación: no terminales en MAYÚSCULAS; terminales de categoría en minúsculas (`num`, `animal`, `raza`,
@@ -727,7 +757,7 @@ NOMBRES → nombre NOMBRES | λ
 AREAOPT → "de" num unidad_area | λ
 VALOR → "por" "un" "valor" "de" MONTO | "valor" DEOPT MONTO
 DEOPT → "de" | λ
-MONTO → num moneda MONEDAOPT
+MONTO → num moneda MONEDAOPT | num "de" moneda
 MONEDAOPT → "de" moneda | moneda | λ
 FECHA → "desde" "el" num "de" mes ANIOOPT | "el" num "de" mes ANIOOPT
 ANIOOPT → "de" num | λ
@@ -816,6 +846,8 @@ producción no necesitan fila. _Generado:_
 | VALOR | `"por"` | `VALOR → "por" "un" "valor" "de" MONTO` |
 | VALOR | `"valor"` | `VALOR → "valor" DEOPT MONTO` |
 | DEOPT | `"de"` | `DEOPT → "de"` |
+| MONTO | `num moneda` | `MONTO → num moneda MONEDAOPT` |
+| MONTO | `num "de"` | `MONTO → num "de" moneda` |
 | MONEDAOPT | `"de" moneda` | `MONEDAOPT → "de" moneda` |
 | MONEDAOPT | `moneda` | `MONEDAOPT → moneda` |
 | FECHA | `"desde"` | `FECHA → "desde" "el" num "de" mes ANIOOPT` |
@@ -835,6 +867,18 @@ producción no necesitan fila. _Generado:_
 | VERBO | `verbo` | `VERBO → verbo` |
 | VERBO | `"se"` | `VERBO → "se" verbo` |
 <!-- /gen:prediccion -->
+
+### 5.2 Recuperación de errores (modo pánico)
+
+Si el siguiente token no puede iniciar ninguna cláusula (no hay fila de predicción para `CLAUSULA`),
+el autómata no rechaza todo el dictado:
+- **Descarta** ese token y lo registra en la traza como "descarta 'x' (recuperación en modo pánico)".
+- Agrega un aviso: _"Se ignoró 'x' en la posición p: no inicia ninguna cláusula."_
+- Sigue con `CONTRATO`.
+
+Una palabra de relleno ya no anula los datos que sí se entendieron. Lo que sigue siendo error, y
+rechaza el dictado, es lo que pasa **dentro** de una cláusula ya empezada ("por 12" sin unidad) y el
+`fin` sin `de los cuales`.
 
 ## 6. Ejemplos paso a paso
 
@@ -1169,14 +1213,15 @@ y [mixta](contratos-demo/03-mixta.md). Campos extraídos de cada frase (_generad
 | Componentes | Vitest + Testing Library | flujo de la interfaz con texto (incluye el diálogo de faltantes) y la fuente de voz |
 | Extremo a extremo | Playwright | tres contratos (pastoreo, cultivo, mixta) con la voz simulada por texto |
 
-Resultado de `pnpm test` al cierre de este informe: **11 archivos, 122 pruebas, todas en verde**;
-115 de ellas son del núcleo:
+Resultado de `pnpm test` al cierre de este informe: **12 archivos, 135 pruebas, todas en verde**;
+128 de ellas son del núcleo:
 
 | Archivo | Pruebas |
 | --- | --- |
 | `regex/regex.test.ts` | 23 |
 | `templates/templates.test.ts` | 19 |
 | `pipeline.test.ts` | 17 |
+| `order.test.ts` (órdenes, sinónimos y recuperación) | 13 |
 | `parser/parser.test.ts` | 15 |
 | `lexer/lexer.test.ts` | 14 |
 | `turing/selection.test.ts` | 8 |
@@ -1187,7 +1232,10 @@ Resultado de `pnpm test` al cierre de este informe: **11 archivos, 122 pruebas, 
 Entre otras cosas, las pruebas verifican que el AFD de varias ER acepta exactamente lo mismo que su
 AFN, que las tres frases de §5.5 dan los mismos campos, la secuencia `Z0 → Z0 SUB → Z0` de la pila, el
 rechazo de `fin` sin apertura, el 6/2/6 de §5.4, el borrado de secciones opcionales y la CLÁUSULA
-SEGUNDA de §6. La puerta de calidad completa es
+SEGUNDA de §6. `order.test.ts` dicta cada contrato (pastoreo, cultivo y mixta, en palabras
+normales y con sinónimos) en una muestra de todos los órdenes posibles de sus cláusulas, unidas con
+espacio o con coma, y exige la misma plantilla y los mismos campos sin avisos. A mano se corrieron 79.552 combinaciones: todos los órdenes de pastoreo y cultivo y uno de cada 37
+en mixta (9 cláusulas), todas aceptadas. La puerta de calidad completa es
 `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:e2e`.
 
 ## 9. Limitaciones
@@ -1195,8 +1243,10 @@ SEGUNDA de §6. La puerta de calidad completa es
 - **Voz.** Se usa la Web Speech API del navegador (Chrome o Edge, con conexión a internet). Puede
   equivocarse con nombres propios, cifras y regionalismos; por eso el texto reconocido se muestra y se
   puede corregir antes de generar, y el cuadro de texto siempre funciona como plan B.
-- **Vocabulario y estructuras.** Solo se reconocen las palabras y construcciones de la gramática.
-  Frases fuera de ella producen errores de sintaxis o campos faltantes, que el diálogo vuelve a pedir.
+- **Vocabulario y estructuras.** Se reconocen las construcciones de la gramática y las variantes del
+  diccionario de sinónimos (§4.5). Las palabras sueltas que no inician una cláusula se ignoran con un
+  aviso (§5.2). Un dato dicho con una estructura que no está en ninguno de los dos queda como campo
+  faltante, y el diálogo lo vuelve a pedir.
   Los números en letras llegan hasta "veinte"; los montos se dicen como "6 millones de pesos".
 - **Nombres.** Una palabra desconocida es `NOMBRE`; un nombre que coincide con una palabra del
   vocabulario (p. ej. un lote llamado "La Ceba") se clasifica con esa otra categoría.

@@ -44,7 +44,7 @@ const RULES: [string, string[][]][] = [
   ["AREAOPT", [['"de"', "num", "unidad_area"], []]],
   ["VALOR", [['"por"', '"un"', '"valor"', '"de"', "MONTO"], ['"valor"', "DEOPT", "MONTO"]]],
   ["DEOPT", [['"de"'], []]],
-  ["MONTO", [["num", "moneda", "MONEDAOPT"]]],
+  ["MONTO", [["num", "moneda", "MONEDAOPT"], ["num", '"de"', "moneda"]]],
   ["MONEDAOPT", [['"de"', "moneda"], ["moneda"], []]],
   ["FECHA", [['"desde"', '"el"', "num", '"de"', "mes", "ANIOOPT"], ['"el"', "num", '"de"', "mes", "ANIOOPT"]]],
   ["ANIOOPT", [['"de"', "num"], []]],

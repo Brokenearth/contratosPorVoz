@@ -33,7 +33,12 @@ function TokensTab({ result }: { result: PipelineResult }) {
               <tr key={i}>
                 <td>{i + 1}</td>
                 <td className="font-mono font-semibold text-emerald-700 dark:text-emerald-400">{token.type}</td>
-                <td>{token.lexeme}</td>
+                <td>
+                  {token.lexeme}
+                  {token.synonymOf !== undefined && (
+                    <span className="text-xs text-slate-500 dark:text-slate-400"> (sinónimo de “{token.synonymOf}”)</span>
+                  )}
+                </td>
                 <td>{String(token.value)}</td>
                 <td className="font-mono text-xs">{step ? step.dfaStates.join(" → ") : "—"}</td>
               </tr>

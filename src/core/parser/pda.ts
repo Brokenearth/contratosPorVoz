@@ -12,6 +12,8 @@ export interface PdaRun {
   tree: ParseTree | null;
   trace: PdaTraceStep[];
   errors: string[];
+  /** Words skipped by panic-mode recovery (they did not start any clause). */
+  warnings: string[];
 }
 
 interface Entry {
@@ -21,6 +23,8 @@ interface Entry {
 
 const OPEN_NESTING = '"cuales"';
 const CLOSE_NESTING = '"fin"';
+/** Panic mode: a token that cannot start any clause is skipped and the analysis goes on. */
+const RECOVERY_SYMBOL = "CLAUSULA";
 
 function describe(symbol: string): string {
   return symbol.startsWith('"') ? `'${symbol.slice(1, -1)}'` : symbol;
@@ -32,12 +36,15 @@ function describe(symbol: string): string {
  *  - `markers`: nesting levels, Z0 at the bottom and one SUB per open
  *    "de los cuales" (pushed on "cuales", popped on "fin"), as in proposal §5.2.
  * It accepts iff all input is consumed, the symbol stack is empty and markers = [Z0].
+ * Error recovery (panic mode): when no clause can start with the next token, that token is discarded with a
+ * warning instead of rejecting the whole dictation; errors inside a clause still reject.
  */
 export function runPda(start: string, tokens: Token[]): PdaRun {
   const root: ParseTree = { symbol: start, children: [] };
   const stack: Entry[] = [{ symbol: start, node: root }];
   const markers: string[] = ["Z0"];
   const trace: PdaTraceStep[] = [];
+  const warnings: string[] = [];
   let pos = 0;
 
   const record = (action: string): void => {
@@ -50,7 +57,7 @@ export function runPda(start: string, tokens: Token[]): PdaRun {
   };
   const reject = (message: string): PdaRun => {
     record(`RECHAZA: ${message}`);
-    return { ok: false, tree: null, trace, errors: [message] };
+    return { ok: false, tree: null, trace, errors: [message], warnings };
   };
   const unexpected = (token: Token, detail = ""): string =>
     `Token inesperado '${token.lexeme}' en la posición ${token.start}${detail}.`;
@@ -65,7 +72,12 @@ export function runPda(start: string, tokens: Token[]): PdaRun {
         if (matches(la1, CLOSE_NESTING) && markers.length === 1) {
           return reject(`'fin' sin 'de los cuales' en la posición ${la1.start}.`);
         }
-        return reject(unexpected(la1));
+        if (top.symbol !== RECOVERY_SYMBOL) return reject(unexpected(la1));
+        warnings.push(`Se ignoró '${la1.lexeme}' en la posición ${la1.start}: no inicia ninguna cláusula.`);
+        top.node.children = [{ symbol: "descartado", token: la1, children: [] }];
+        pos++;
+        record(`descarta '${la1.lexeme}' (recuperación en modo pánico)`);
+        continue;
       }
       const production = productionOf(top.symbol, alternative);
       top.node.children = production.body.map((symbol) => ({ symbol, children: [] }));
@@ -101,5 +113,5 @@ export function runPda(start: string, tokens: Token[]): PdaRun {
   if (leftover !== undefined) return reject(unexpected(leftover));
   if (markers.length !== 1) return reject("Frase incompleta: falta 'fin' para cerrar 'de los cuales'.");
   record("ACEPTA");
-  return { ok: true, tree: root, trace, errors: [] };
+  return { ok: true, tree: root, trace, errors: [], warnings };
 }

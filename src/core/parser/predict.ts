@@ -63,6 +63,7 @@ export const PREDICT: Record<string, Row[]> = {
   AREAOPT: [row(0, '"de"', "num")],
   VALOR: [row(0, '"por"'), row(1, '"valor"')],
   DEOPT: [row(0, '"de"')],
+  MONTO: [row(0, "num", "moneda"), row(1, "num", '"de"')],
   MONEDAOPT: [row(0, '"de"', "moneda"), row(1, "moneda")],
   FECHA: [row(0, '"desde"'), row(1, '"el"')],
   ANIOOPT: [row(0, '"de"', "num")],

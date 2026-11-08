@@ -2,6 +2,7 @@ import { type Automaton, type Dfa, compileRegex, longestMatch } from "../regex";
 import type { LexResult, LexStep, Token } from "../types";
 import { NAMED_DEFINITIONS, TOKEN_DEFINITIONS, type TokenDefinition } from "./definitions";
 import { normalize } from "./normalize";
+import { applySynonyms } from "./synonyms";
 
 export interface TokenAutomata {
   definition: TokenDefinition;
@@ -10,8 +11,8 @@ export interface TokenAutomata {
   dfa: Dfa;
 }
 
-/** Characters skipped between tokens: whitespace and sentence punctuation. */
-const SKIPPED: readonly string[] = [" ", "\t", "\n", "\r", ".", ";", ":", "!", "?", "¿", "¡", '"', "'"];
+/** Characters skipped between tokens: whitespace, sentence punctuation and the "$" before an amount. */
+const SKIPPED: readonly string[] = [" ", "\t", "\n", "\r", ".", ";", ":", "!", "?", "¿", "¡", '"', "'", "$"];
 
 let compiled: TokenAutomata[] | null = null;
 
@@ -47,8 +48,8 @@ function bestMatch(text: string, position: number): Candidate | null {
   return best;
 }
 
-/** Lexical analysis: normalized text → tokens (with original lexemes and positions) plus a DFA trace. */
-export function tokenize(text: string): LexResult {
+/** Scans with the DFAs only: normalized text → tokens (with original lexemes and positions) plus a DFA trace. */
+function scan(text: string): LexResult {
   const normalized = normalize(text);
   const tokens: Token[] = [];
   const trace: LexStep[] = [];
@@ -83,4 +84,10 @@ export function tokenize(text: string): LexResult {
     position = end;
   }
   return { tokens, trace, errors };
+}
+
+/** Lexical analysis: DFA scan, then the synonym dictionary rewrites phrases into canonical tokens. */
+export function tokenize(text: string): LexResult {
+  const result = scan(text);
+  return { ...result, tokens: applySynonyms(result.tokens, text, (canonical) => scan(canonical).tokens) };
 }

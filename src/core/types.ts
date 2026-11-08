@@ -1,7 +1,8 @@
 export type TokenType =
   | "NUM" | "ANIMAL" | "RAZA" | "UNIDAD_TIEMPO" | "UNIDAD_AREA" | "MES" | "MONEDA"
   | "VERBO" | "USO" | "CULTIVO" | "INSUMOS" | "PALABRA_CLAVE" | "CONECTOR" | "COMA" | "NOMBRE" | "DESCONOCIDO";
-export interface Token { type: TokenType; lexeme: string; value: string | number; start: number; end: number }
+/** `synonymOf`: original words when the token comes from the synonym dictionary ("a partir del" → "desde"). */
+export interface Token { type: TokenType; lexeme: string; value: string | number; start: number; end: number; synonymOf?: string }
 export interface LexStep { position: number; tokenType: TokenType | null; dfaStates: string[]; accepted: boolean }
 export interface LexResult { tokens: Token[]; trace: LexStep[]; errors: { position: number; lexeme: string; message: string }[] }
 

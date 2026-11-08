@@ -10,6 +10,7 @@ export type { PdaTraceStep } from "./pda";
 /** ParseResult whose trace also carries the grammar-symbol stack of each step. */
 export interface ParseOutcome extends ParseResult {
   trace: PdaTraceStep[];
+  warnings: string[];
 }
 
 /** Parses `tokens` starting from any nonterminal (e.g. "LISTA" to show the §5.2 AST). */

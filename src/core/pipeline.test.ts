@@ -126,9 +126,9 @@ describe("runPipeline with the real lexer", () => {
 
   it("reports clear errors on garbage input without crashing", () => {
     const result = runPipeline("@@ hola mundo #");
-    expect(result.parse.ok).toBe(false);
+    expect(result.parse.ok).toBe(true);
     expect(result.errors).toContain("Símbolo desconocido '@' en la posición 0.");
-    expect(result.errors.some((e) => e.includes("Token inesperado 'hola'"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("Se ignoró 'hola'"))).toBe(true);
     expect(result.template).toBeNull();
     expect(result.contract).toBeNull();
     expect(result.question).toContain("No se reconoció");

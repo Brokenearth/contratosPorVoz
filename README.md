@@ -40,6 +40,19 @@ Puede mencionar los datos **en cualquier orden**: animales (cantidad, tipo y raz
 nombre) y hectáreas, fecha de inicio, duración, valor, uso, cultivo, quién aporta los insumos y los
 nombres del arrendador y del arrendatario.
 
+También entiende **sinónimos** gracias a un diccionario (`src/core/lexer/synonyms.ts`). Por ejemplo:
+- "a partir del" equivale a "desde el".
+- "por un plazo de" equivale a "por".
+- "finca" o "predio" equivalen a "lote".
+- "por la suma de" equivale a "por un valor de".
+
+Los montos se pueden dar en cifras ("$6.000.000 de pesos"). Si una palabra no encaja, se ignora con un
+aviso y el resto se procesa igual. Ejemplo:
+
+> Se arrienda por un período de 12 meses, a partir del 15 de noviembre de 2026, el lote denominado La
+> Esperanza, con una extensión de 5 hectáreas, destinado al mantenimiento de 20 vacas de raza Holstein
+> para producción de leche, por un valor de $6.000.000 de pesos.
+
 ## Guion de demostración (3 contratos)
 
 1. **Pastoreo:**
