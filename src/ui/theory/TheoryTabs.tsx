@@ -5,11 +5,22 @@ import { Panel } from "../Panel";
 import { LexerAutomata } from "./LexerAutomata";
 import { TuringViewer } from "./TuringViewer";
 
-const TABS = ["Tokens", "Autómata del léxico", "Árbol de derivación", "Pila", "Selección", "Máquina de Turing"] as const;
+const TABS = [
+  "Tokens",
+  "Autómata del léxico",
+  "Árbol de derivación",
+  "Pila",
+  "Selección",
+  "Máquina de Turing",
+] as const;
 type Tab = (typeof TABS)[number];
 
 function Scroll({ children }: { children: ReactNode }) {
-  return <div className="max-h-[28rem] overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">{children}</div>;
+  return (
+    <div className="max-h-[28rem] overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
+      {children}
+    </div>
+  );
 }
 
 function TokensTab({ result }: { result: PipelineResult }) {
@@ -28,7 +39,9 @@ function TokensTab({ result }: { result: PipelineResult }) {
         </thead>
         <tbody>
           {tokens.map((token, i) => {
-            const step = trace.find((s) => s.position === token.start && s.accepted);
+            // A synonym token was not read by a DFA at that position: the trace there belongs to the original word.
+            const step =
+              token.synonymOf === undefined ? trace.find((s) => s.position === token.start && s.accepted) : undefined;
             return (
               <tr key={i}>
                 <td>{i + 1}</td>
@@ -36,7 +49,10 @@ function TokensTab({ result }: { result: PipelineResult }) {
                 <td>
                   {token.lexeme}
                   {token.synonymOf !== undefined && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400"> (sinónimo de “{token.synonymOf}”)</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {" "}
+                      (sinónimo de “{token.synonymOf}”)
+                    </span>
                   )}
                 </td>
                 <td>{String(token.value)}</td>
@@ -141,14 +157,19 @@ function SelectionTab({ result }: { result: PipelineResult }) {
           ))}
         </tbody>
       </table>
-      {(tie || low) && <p className="text-sm text-amber-700 dark:text-amber-300">{tie ? "Empate entre plantillas." : "Coincidencia baja."}</p>}
+      {(tie || low) && (
+        <p className="text-sm text-amber-700 dark:text-amber-300">
+          {tie ? "Empate entre plantillas." : "Coincidencia baja."}
+        </p>
+      )}
       <TuringViewer run={run} label="Máquina de Turing de selección" />
     </div>
   );
 }
 
 function TuringTab({ result }: { result: PipelineResult }) {
-  if (!result.contract) return <p className="text-sm">La máquina de llenado se ejecuta cuando el contrato se genera.</p>;
+  if (!result.contract)
+    return <p className="text-sm">La máquina de llenado se ejecuta cuando el contrato se genera.</p>;
   return <TuringViewer run={result.contract} label="Máquina de Turing de llenado" />;
 }
 
@@ -164,7 +185,11 @@ export function TheoryTabs({ result, runId }: { result: PipelineResult; runId: n
   };
   return (
     <Panel id="teoria" title="Cómo funciona por dentro">
-      <div role="tablist" aria-label="Paneles de teoría" className="mb-4 flex flex-wrap gap-1 border-b border-slate-200 dark:border-slate-700">
+      <div
+        role="tablist"
+        aria-label="Paneles de teoría"
+        className="mb-4 flex flex-wrap gap-1 border-b border-slate-200 dark:border-slate-700"
+      >
         {TABS.map((t) => (
           <button
             key={t}
