@@ -7,7 +7,12 @@ type Block =
   | { kind: "table"; rows: string[][] }
   | { kind: "paragraph"; text: string };
 
-const cells = (line: string) => line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+const cells = (line: string) =>
+  line
+    .trim()
+    .replace(/^\||\|$/g, "")
+    .split("|")
+    .map((c) => c.trim());
 const isSeparator = (line: string) => /^\|?[\s:|-]+\|?$/.test(line.trim()) && line.includes("-");
 
 /** Splits the markdown subset used by the templates into blocks. */
@@ -67,17 +72,23 @@ export function renderInline(text: string): ReactNode[] {
     });
 }
 
-const HEADING_CLASS = ["text-xl font-bold mt-2", "text-lg font-semibold mt-4", "font-semibold mt-3"];
+export const headingId = (text: string) =>
+  `documento-${text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-$/, "")}`;
 
 export function Markdown({ source }: { source: string }) {
   return (
-    <div className="space-y-3 text-sm leading-relaxed">
+    <div className="contract-text">
       {parseBlocks(source).map((block, i) => {
         switch (block.kind) {
           case "heading": {
             const Tag = `h${Math.min(block.level + 2, 6)}` as "h3";
             return (
-              <Tag key={i} className={HEADING_CLASS[Math.min(block.level, 3) - 1]}>
+              <Tag key={i} id={headingId(block.text)} className={`document-heading document-heading-${block.level}`}>
                 {renderInline(block.text)}
               </Tag>
             );

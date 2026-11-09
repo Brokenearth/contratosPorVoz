@@ -9,8 +9,8 @@ describe("dialog (§5.6)", () => {
   it("builds the guide from the template declaration", () => {
     const text = guideText(pastoreo);
     expect(text).toContain("Para redactar su contrato, mencione:");
-    expect(text).toContain("✔ Tipo de animal (y raza, si aplica)");
-    expect(text).toContain("✔ Para qué se usará (uso)");
+    expect(text).toContain("• Tipo de animal (y raza, si aplica)");
+    expect(text).toContain("• Para qué se usará (uso)");
     expect(text).toContain("Opcional: raza, cantidad de animales, duración");
     expect(text).toContain("Puede decirlo en el orden que prefiera.");
     expect(guideText({ required: ["cultivo"], optional: [] })).not.toContain("animal");

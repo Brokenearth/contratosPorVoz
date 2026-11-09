@@ -4,9 +4,8 @@ titulo: Contrato de arrendamiento de lote para cultivo
 requeridos: lote, hectareas, cultivo, insumos, fecha, duracion, valor
 opcionales: arrendador, arrendatario
 ---
-# CONTRATO DE ARRENDAMIENTO DE LOTE PARA CULTIVO
 
-> **Borrador generado automáticamente.** Este documento es un borrador de referencia y no reemplaza la asesoría de un abogado. Revíselo antes de firmarlo.
+# CONTRATO DE ARRENDAMIENTO DE LOTE PARA CULTIVO
 
 ## Partes
 
@@ -48,8 +47,8 @@ CLÁUSULA OCTAVA. Las diferencias que surjan entre las partes por causa de este 
 
 Para constancia se firma en dos ejemplares del mismo tenor.
 
-| EL ARRENDADOR | EL ARRENDATARIO |
-| --- | --- |
+| EL ARRENDADOR                  | EL ARRENDATARIO                |
+| ------------------------------ | ------------------------------ |
 | ______________________________ | ______________________________ |
-| {{arrendador}} | {{arrendatario}} |
-| C.C. ____________________ | C.C. ____________________ |
+| {{arrendador}}                 | {{arrendatario}}               |
+| C.C. ____________________      | C.C. ____________________      |

@@ -4,9 +4,8 @@ titulo: Contrato de arrendamiento mixto de lote (pastoreo y cultivo)
 requeridos: lote, hectareas, tipo_animal, cantidad_animales, raza, fecha, uso, cultivo, insumos, duracion, valor
 opcionales: arrendador, arrendatario, animales_descripcion
 ---
-# CONTRATO DE ARRENDAMIENTO MIXTO DE LOTE (PASTOREO Y CULTIVO)
 
-> **Borrador generado automáticamente.** Este documento es un borrador de referencia y no reemplaza la asesoría de un abogado. Revíselo antes de firmarlo.
+# CONTRATO DE ARRENDAMIENTO MIXTO DE LOTE (PASTOREO Y CULTIVO)
 
 ## Partes
 
@@ -48,8 +47,8 @@ CLÁUSULA OCTAVA. Las diferencias que surjan entre las partes por causa de este 
 
 Para constancia se firma en dos ejemplares del mismo tenor.
 
-| EL ARRENDADOR | EL ARRENDATARIO |
-| --- | --- |
+| EL ARRENDADOR                  | EL ARRENDATARIO                |
+| ------------------------------ | ------------------------------ |
 | ______________________________ | ______________________________ |
-| {{arrendador}} | {{arrendatario}} |
-| C.C. ____________________ | C.C. ____________________ |
+| {{arrendador}}                 | {{arrendatario}}               |
+| C.C. ____________________      | C.C. ____________________      |

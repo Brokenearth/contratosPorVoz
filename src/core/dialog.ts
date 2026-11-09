@@ -86,7 +86,7 @@ function joinSpanish(parts: string[]): string {
 /** Initial guide (proposal §5.6) built from the template declaration. */
 export function guideText(declaration: FieldDeclaration): string {
   const lines = ["Para redactar su contrato, mencione:"];
-  for (const key of declaration.required) lines.push(`✔ ${capitalize(infoOf(key)?.guide ?? key)}`);
+  for (const key of declaration.required) lines.push(`• ${capitalize(infoOf(key)?.guide ?? key)}`);
   if (declaration.optional.length > 0) {
     lines.push(`Opcional: ${declaration.optional.map((k) => (infoOf(k)?.guide ?? k).toLowerCase()).join(", ")}`);
   }

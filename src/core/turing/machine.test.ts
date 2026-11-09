@@ -54,6 +54,7 @@ describe("runMachine", () => {
     const run = runMachine(aToB, ["a", "a"]);
     expect(run.snapshots.map((s) => s.state)).toEqual(["q0", "q_ok"]);
     expect(run.snapshots[0]?.tape).toEqual(["a", "a"]);
+    expect(run.snapshots.map((s) => s.step)).toEqual([0, 3]);
   });
 
   it("can also sample every N steps", () => {

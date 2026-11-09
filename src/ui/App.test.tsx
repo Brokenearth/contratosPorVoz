@@ -9,10 +9,12 @@ afterEach(cleanup);
 const contract = () => screen.getByRole("article", { name: "Contrato" });
 
 describe("App", () => {
-  it("shows the title, disclaimer and guide", () => {
+  it("shows instructions without draft notices or voice guide", () => {
     render(<App />);
     expect(screen.getByRole("heading", { name: "Contratos rurales por voz" })).toBeInTheDocument();
-    expect(screen.getByText(/Borrador informativo; no reemplaza la asesoría de un abogado/)).toBeInTheDocument();
+    expect(screen.queryByText(/Borrador informativo/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Leer guía/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Instrucciones")).toHaveTextContent("Las condiciones");
     expect(screen.getByLabelText("Guía")).toHaveTextContent("Para redactar su contrato, mencione:");
     expect(screen.getByRole("button", { name: "Analizar" })).toBeDisabled();
   });
@@ -35,7 +37,7 @@ describe("App", () => {
     await user.click(screen.getByRole("tab", { name: "Árbol de derivación" }));
     expect(screen.getByRole("list", { name: "Árbol de derivación" })).toHaveTextContent("CONTRATO");
     await user.click(screen.getByRole("tab", { name: "Selección" }));
-    expect(screen.getByRole("tabpanel")).toHaveTextContent("PASTOREO ✔");
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("Seleccionada");
     await user.click(screen.getByRole("tab", { name: "Autómata del léxico" }));
     expect(screen.getByText(/AFD \(construcción de subconjuntos\)/)).toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Máquina de Turing" }));
@@ -53,10 +55,13 @@ describe("App", () => {
     );
     await user.click(screen.getByRole("button", { name: "Analizar" }));
     expect(screen.getByText("Falta la fecha y el valor del arrendamiento.")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Campos requeridos" })).toHaveTextContent("✘ Fecha de inicio");
+    expect(screen.getByRole("list", { name: "Campos requeridos" })).toHaveTextContent("Falta Fecha de inicio");
     expect(screen.queryByRole("article", { name: "Contrato" })).not.toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("Su respuesta"), "desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos");
+    await user.type(
+      screen.getByLabelText("Su respuesta"),
+      "desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos",
+    );
     await user.click(screen.getByRole("button", { name: "Responder" }));
     expect(contract()).toHaveTextContent("maíz");
     expect(contract()).toHaveTextContent("$ 2.000.000 pesos");
@@ -66,7 +71,10 @@ describe("App", () => {
   it("generates anyway with pending markers highlighted", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.type(screen.getByLabelText("Texto del contrato"), "arriendo lote La Esperanza para 20 vacas de raza holstein");
+    await user.type(
+      screen.getByLabelText("Texto del contrato"),
+      "arriendo lote La Esperanza para 20 vacas de raza holstein",
+    );
     await user.click(screen.getByRole("button", { name: "Analizar" }));
     await user.click(screen.getByRole("button", { name: "Generar de todos modos" }));
     expect(contract().querySelectorAll("mark[data-pending]").length).toBeGreaterThan(0);

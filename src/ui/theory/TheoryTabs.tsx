@@ -1,8 +1,12 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import type { PipelineResult } from "../../core/pipeline";
 import type { ParseTree } from "../../core/types";
+import { contractValues } from "../../core/templates";
+import { fillMachine } from "../../core/turing/fill";
+import { selectionMachine } from "../../core/turing/selection";
 import { Panel } from "../Panel";
 import { LexerAutomata } from "./LexerAutomata";
+import { StackViewer } from "./StackViewer";
 import { TuringViewer } from "./TuringViewer";
 
 const TABS = [
@@ -14,68 +18,92 @@ const TABS = [
   "Máquina de Turing",
 ] as const;
 type Tab = (typeof TABS)[number];
-
-function Scroll({ children }: { children: ReactNode }) {
-  return (
-    <div className="max-h-[28rem] overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
-      {children}
-    </div>
-  );
-}
+const DESCRIPTIONS = [
+  "Separar las palabras",
+  "Reconocer un token",
+  "Aplicar la gramática",
+  "Seguir el análisis",
+  "Elegir la plantilla",
+  "Construir el documento",
+];
 
 function TokensTab({ result }: { result: PipelineResult }) {
   const { tokens, trace } = result.lex;
   return (
-    <Scroll>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Lexema</th>
-            <th scope="col">Valor</th>
-            <th scope="col">Estados del AFD</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tokens.map((token, i) => {
-            // A synonym token was not read by a DFA at that position: the trace there belongs to the original word.
-            const step =
-              token.synonymOf === undefined ? trace.find((s) => s.position === token.start && s.accepted) : undefined;
-            return (
-              <tr key={i}>
-                <td>{i + 1}</td>
-                <td className="font-mono font-semibold text-emerald-700 dark:text-emerald-400">{token.type}</td>
-                <td>
-                  {token.lexeme}
-                  {token.synonymOf !== undefined && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      {" "}
-                      (sinónimo de “{token.synonymOf}”)
-                    </span>
-                  )}
-                </td>
-                <td>{String(token.value)}</td>
-                <td className="font-mono text-xs">{step ? step.dfaStates.join(" → ") : "—"}</td>
+    <div>
+      <div className="simulation-heading">
+        <div>
+          <p className="eyebrow">ANÁLISIS LÉXICO</p>
+          <h3>Del texto a los tokens</h3>
+        </div>
+        <span className="status-tag">{tokens.length} tokens</span>
+      </div>
+      <p className="theory-description">
+        El analizador agrupa caracteres y asigna un tipo a cada palabra o número. Después, el diccionario transforma los
+        sinónimos en expresiones que reconoce la gramática.
+      </p>
+      <div className="token-ribbon" aria-label="Secuencia de tokens">
+        {tokens.map((t, i) => (
+          <span key={i} title={`${t.type}: ${String(t.value)}`}>
+            <strong>{t.lexeme}</strong>
+            <small>{t.type}</small>
+          </span>
+        ))}
+      </div>
+      <details className="technical-details">
+        <summary>Ver valores y recorridos de los tokens</summary>
+        <div className="table-scroll">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tipo</th>
+                <th>Lexema</th>
+                <th>Valor</th>
+                <th>Estados del AFD</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </Scroll>
+            </thead>
+            <tbody>
+              {tokens.map((token, i) => {
+                const step =
+                  token.synonymOf === undefined
+                    ? trace.find((s) => s.position === token.start && s.accepted)
+                    : undefined;
+                return (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td>
+                      <code>{token.type}</code>
+                    </td>
+                    <td>
+                      {token.lexeme}
+                      {token.synonymOf !== undefined && <small> (sinónimo de «{token.synonymOf}»)</small>}
+                    </td>
+                    <td>{String(token.value)}</td>
+                    <td>
+                      <code>{step?.dfaStates.join(" → ") ?? "—"}</code>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
   );
 }
 
 function TreeNode({ node }: { node: ParseTree }) {
   return (
     <li>
-      <span className={node.token ? "font-mono text-emerald-700 dark:text-emerald-400" : "font-semibold"}>
+      <span className={node.token ? "tree-terminal" : "tree-nonterminal"}>
         {node.symbol}
-        {node.token && <span className="text-slate-600 dark:text-slate-300"> “{node.token.lexeme}”</span>}
-        {!node.token && node.children.length === 0 && <span className="text-slate-400"> λ</span>}
+        {node.token && <em> «{node.token.lexeme}»</em>}
+        {!node.token && node.children.length === 0 && " λ"}
       </span>
       {node.children.length > 0 && (
-        <ul className="ml-3 border-l border-slate-300 pl-3 dark:border-slate-700">
+        <ul>
           {node.children.map((child, i) => (
             <TreeNode key={i} node={child} />
           ))}
@@ -84,132 +112,180 @@ function TreeNode({ node }: { node: ParseTree }) {
     </li>
   );
 }
-
 function TreeTab({ result }: { result: PipelineResult }) {
-  const { tree, ok } = result.parse;
-  if (!tree) return <p className="text-sm">No se pudo construir el árbol.</p>;
+  if (!result.parse.tree)
+    return <p className="pending-note">No se pudo construir el árbol. Revise los avisos del análisis.</p>;
   return (
-    <div className="space-y-2">
-      <p className="text-sm">{ok ? "Cadena aceptada por la gramática." : "La cadena no fue aceptada por completo."}</p>
-      <Scroll>
-        <ul className="p-3 text-sm" aria-label="Árbol de derivación">
-          <TreeNode node={tree} />
+    <div>
+      <div className="simulation-heading">
+        <div>
+          <p className="eyebrow">GRAMÁTICA LIBRE DE CONTEXTO</p>
+          <h3>La estructura de lo que dijo</h3>
+        </div>
+        <span className="status-tag">{result.parse.ok ? "Cadena aceptada" : "Análisis parcial"}</span>
+      </div>
+      <p className="theory-description">
+        Cada rama aplica una producción. Los símbolos de la gramática se descomponen hasta llegar a las palabras de su
+        texto.
+      </p>
+      <div className="tree-scroll">
+        <ul className="derivation-tree" aria-label="Árbol de derivación">
+          <TreeNode node={result.parse.tree} />
         </ul>
-      </Scroll>
+      </div>
     </div>
   );
 }
-
-function StackTab({ result }: { result: PipelineResult }) {
-  return (
-    <Scroll>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th scope="col">Paso</th>
-            <th scope="col">Entrada restante</th>
-            <th scope="col">Acción</th>
-            <th scope="col">Pila Z0/SUB</th>
-            <th scope="col">Pila de símbolos (tope a la derecha)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {result.parse.trace.map((step, i) => (
-            <tr key={i}>
-              <td>{i}</td>
-              <td className="max-w-56 truncate" title={step.input}>
-                {step.input || "λ"}
-              </td>
-              <td className="font-mono text-xs">{step.action}</td>
-              <td className="font-mono">{step.stack.join(" ")}</td>
-              <td className="font-mono text-xs">{step.symbols.join(" ") || "∅"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Scroll>
-  );
-}
-
 function SelectionTab({ result }: { result: PipelineResult }) {
   const { scores, templateId, tie, low, run } = result.selection;
   return (
-    <div className="space-y-4">
-      <table className="data-table max-w-md">
-        <thead>
-          <tr>
-            <th scope="col">Plantilla</th>
-            <th scope="col">Coincidencias</th>
-            <th scope="col">Puntaje</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(scores).map(([id, { matched, total }]) => (
-            <tr key={id} className={id === templateId ? "bg-emerald-50 font-semibold dark:bg-emerald-500/10" : ""}>
-              <td>
-                {id} {id === templateId && "✔"}
-              </td>
-              <td>
-                {matched} / {total}
-              </td>
-              <td>{total > 0 ? Math.round((matched / total) * 100) : 0}%</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div>
+      <div className="selection-scores">
+        {Object.entries(scores).map(([id, { matched, total }]) => (
+          <div className={id === templateId ? "score-card is-selected" : "score-card"} key={id}>
+            <div>
+              <h3>{id.toLowerCase()}</h3>
+              <span>{id === templateId ? "Seleccionada" : "Alternativa"}</span>
+            </div>
+            <strong>
+              {total ? Math.round((matched / total) * 100) : 0}
+              <small>%</small>
+            </strong>
+            <progress value={matched} max={total} aria-label={`Coincidencias ${id}`} />
+            <p>
+              {matched} de {total} campos requeridos detectados
+            </p>
+          </div>
+        ))}
+      </div>
+      <p className="theory-description">
+        Se elige la plantilla con mayor proporción de campos presentes; a igual proporción, la que cubre más campos. El
+        orden de las plantillas resuelve los empates restantes.
+      </p>
       {(tie || low) && (
-        <p className="text-sm text-amber-700 dark:text-amber-300">
-          {tie ? "Empate entre plantillas." : "Coincidencia baja."}
+        <p className="pending-note">
+          {tie
+            ? "Empate entre plantillas. Complete los datos para precisar la elección."
+            : "Coincidencia baja: aún faltan datos para identificar el contrato."}
         </p>
       )}
-      <TuringViewer run={run} label="Máquina de Turing de selección" />
+      <TuringViewer run={run} label="Máquina de Turing de selección" machine={selectionMachine()} />
     </div>
   );
 }
-
 function TuringTab({ result }: { result: PipelineResult }) {
   if (!result.contract)
-    return <p className="text-sm">La máquina de llenado se ejecuta cuando el contrato se genera.</p>;
-  return <TuringViewer run={result.contract} label="Máquina de Turing de llenado" />;
+    return (
+      <div className="theory-empty">
+        <h3>La plantilla está lista para completar</h3>
+        <p>
+          La máquina de llenado se ejecuta cuando el contrato se genera. Complete los datos solicitados o genere el
+          documento con campos pendientes.
+        </p>
+      </div>
+    );
+  return (
+    <TuringViewer
+      run={result.contract}
+      label="Máquina de Turing de llenado"
+      machine={fillMachine(contractValues(result.fields))}
+    />
+  );
 }
 
-export function TheoryTabs({ result, runId }: { result: PipelineResult; runId: number }) {
+export function TheoryTabs({
+  result,
+  runId,
+  input,
+  isAnswer,
+}: {
+  result: PipelineResult;
+  runId: number;
+  input: string;
+  isAnswer: boolean;
+}) {
   const [tab, setTab] = useState<Tab>("Tokens");
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const content: Record<Tab, ReactNode> = {
     Tokens: <TokensTab result={result} />,
-    "Autómata del léxico": <LexerAutomata initial="NUM" />,
+    "Autómata del léxico": <LexerAutomata tokens={result.lex.tokens} />,
     "Árbol de derivación": <TreeTab result={result} />,
-    Pila: <StackTab result={result} />,
-    Selección: <SelectionTab key={runId} result={result} />,
-    "Máquina de Turing": <TuringTab key={runId} result={result} />,
+    Pila: <StackViewer result={result} />,
+    Selección: <SelectionTab result={result} />,
+    "Máquina de Turing": <TuringTab result={result} />,
   };
   return (
-    <Panel id="teoria" title="Cómo funciona por dentro">
-      <div
-        role="tablist"
-        aria-label="Paneles de teoría"
-        className="mb-4 flex flex-wrap gap-1 border-b border-slate-200 dark:border-slate-700"
-      >
-        {TABS.map((t) => (
+    <Panel id="teoria" title="Cómo funciona por dentro" actions={<span className="section-number">LABORATORIO</span>}>
+      <div className="theory-intro">
+        <p>Explore el camino de sus palabras hasta el contrato.</p>
+        <div className="pipeline-map" aria-label="Etapas del procesamiento">
+          <span>Texto de entrada</span>
+          <span>AFD · Tokens</span>
+          <span>Pila · Gramática</span>
+          <span>MT · Plantilla y llenado</span>
+          <span>Contrato</span>
+        </div>
+        <details className="analyzed-input">
+          <summary>
+            {isAnswer ? "Última respuesta analizada" : "Texto analizado"} · ejecución {runId}
+          </summary>
+          <p>{input}</p>
+          {isAnswer && (
+            <p>
+              Los tokens, el árbol y la pila corresponden a esta respuesta. La selección y el contrato usan los datos
+              acumulados de la conversación.
+            </p>
+          )}
+        </details>
+      </div>
+      <div role="tablist" aria-label="Paneles de teoría" className="theory-tabs">
+        {TABS.map((t, i) => (
           <button
             key={t}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
             role="tab"
+            aria-label={t}
             type="button"
-            id={`tab-${t}`}
+            id={`theory-tab-${i}`}
             aria-selected={tab === t}
+            tabIndex={tab === t ? 0 : -1}
             aria-controls="panel-teoria"
             onClick={() => setTab(t)}
-            className={`-mb-px rounded-t-lg border-b-2 px-3 py-2 text-sm ${
-              tab === t
-                ? "border-emerald-600 font-semibold text-emerald-700 dark:text-emerald-400"
-                : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-            }`}
+            onKeyDown={(e) => {
+              const next =
+                e.key === "ArrowRight"
+                  ? (i + 1) % TABS.length
+                  : e.key === "ArrowLeft"
+                    ? (i - 1 + TABS.length) % TABS.length
+                    : e.key === "Home"
+                      ? 0
+                      : e.key === "End"
+                        ? TABS.length - 1
+                        : null;
+              if (next !== null) {
+                e.preventDefault();
+                setTab(TABS[next]!);
+                refs.current[next]?.focus();
+              }
+            }}
           >
-            {t}
+            <span className="tab-title">
+              <b>0{i + 1}</b>
+              {t}
+            </span>
+            <small>{DESCRIPTIONS[i]}</small>
           </button>
         ))}
       </div>
-      <div role="tabpanel" id="panel-teoria" aria-labelledby={`tab-${tab}`}>
+      <div
+        role="tabpanel"
+        id="panel-teoria"
+        aria-labelledby={`theory-tab-${TABS.indexOf(tab)}`}
+        tabIndex={0}
+        className="theory-content"
+      >
         {content[tab]}
       </div>
     </Panel>

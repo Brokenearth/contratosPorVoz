@@ -20,10 +20,12 @@ async function downloadContract(page: Page): Promise<{ name: string; content: st
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("Borrador informativo; no reemplaza la asesoría de un abogado")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Contratos rurales por voz" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Leer guía/ })).toHaveCount(0);
 });
 
 test("pastoreo: demo phrase generates and downloads the contract", async ({ page }) => {
+  await page.screenshot({ path: `${SCREENSHOTS}/00-inicio.png`, fullPage: true });
   await page.getByRole("button", { name: "Pastoreo (leche)" }).click();
   await page.getByRole("button", { name: "Analizar" }).click();
   const contract = page.getByRole("article", { name: "Contrato" });
@@ -36,6 +38,7 @@ test("pastoreo: demo phrase generates and downloads the contract", async ({ page
     "CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote La Esperanza (5 hectáreas) un máximo de 20 vacas de raza Holstein, destinadas exclusivamente a la producción de leche, durante 12 meses.",
   );
   expect(file.content).not.toContain("{{");
+  expect(file.content).not.toMatch(/borrador|generado automáticamente/i);
 });
 
 test("cultivo: missing-fields dialog, answer completes and downloads", async ({ page }) => {
@@ -49,7 +52,7 @@ test("cultivo: missing-fields dialog, answer completes and downloads", async ({ 
 
   await page.getByLabel("Su respuesta").fill("desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos");
   await page.getByRole("button", { name: "Responder" }).click();
-  await expect(page.getByText("Todos los campos requeridos están completos")).toBeVisible();
+  await expect(page.getByText(/Todos los campos requeridos están completos/)).toBeVisible();
 
   const file = await downloadContract(page);
   expect(file.name).toBe("contrato-cultivo.md");
@@ -57,6 +60,7 @@ test("cultivo: missing-fields dialog, answer completes and downloads", async ({ 
   expect(file.content).toContain("$ 2.000.000 pesos");
   expect(file.content).toContain("1 de diciembre de 2026");
   expect(file.content).not.toContain("{{");
+  expect(file.content).not.toMatch(/borrador|generado automáticamente/i);
 });
 
 test("mixta: generates and downloads, theory panels and Turing machine", async ({ page }) => {
@@ -79,7 +83,7 @@ test("mixta: generates and downloads, theory panels and Turing machine", async (
   await page.getByRole("tab", { name: "Pila" }).click();
   await expect(page.getByRole("tabpanel")).toContainText("Z0");
   await page.getByRole("tab", { name: "Autómata del léxico" }).click();
-  await expect(page.getByRole("tabpanel")).toContainText("AFN-λ (Thompson)");
+  await expect(page.getByRole("img", { name: "Recorrido de la cadena sobre el AFD" })).toBeVisible();
   await page.getByRole("tabpanel").screenshot({ path: `${SCREENSHOTS}/04-automata.png` });
 });
 
@@ -108,7 +112,6 @@ test("voice: a fake SpeechRecognition fills the editable textarea", async ({ pag
         setTimeout(() => {
           const result = Object.assign([{ transcript }], { isFinal: true });
           this.onresult?.({ resultIndex: 0, results: [result] });
-          this.onend?.();
         }, 100);
       }
       stop() {
@@ -123,10 +126,75 @@ test("voice: a fake SpeechRecognition fills the editable textarea", async ({ pag
   await expect(field).toHaveValue(/cultivo de café/);
   expect(await page.evaluate(() => (window as unknown as { __lang: string }).__lang)).toBe("es-CO");
 
+  await page.getByRole("button", { name: "Detener dictado" }).click();
   await field.fill(`${await field.inputValue()}, arrendatario Ana Gómez`);
   await page.getByRole("button", { name: "Analizar" }).click();
   const file = await downloadContract(page);
   expect(file.name).toBe("contrato-cultivo.md");
   expect(file.content).toContain("café");
   expect(file.content).toContain("Ana Gómez");
+});
+
+test("simulators: rejection, nested stack and final Turing state", async ({ page }) => {
+  await page.getByRole("button", { name: "Pastoreo anidado" }).click();
+  await page.getByRole("button", { name: "Analizar", exact: true }).click();
+  await page.getByRole("tab", { name: "Autómata del léxico", exact: true }).click();
+  await page.getByLabel("Cadena de prueba").fill("2x");
+  await page.getByRole("button", { name: "Paso", exact: true }).click();
+  await page.getByRole("button", { name: "Paso", exact: true }).click();
+  await expect(page.getByRole("tabpanel").getByRole("status")).toContainText("No existe una transición para «x»");
+  await page.getByRole("tab", { name: "Pila", exact: true }).click();
+  await page.getByRole("slider").press("End");
+  await expect(page.getByText("Pila vacía", { exact: true })).toBeVisible();
+  await expect(page.getByText("Entrada aceptada", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Máquina de Turing", exact: true }).click();
+  await expect(page.getByRole("img", { name: "Grafo de la máquina de Turing" })).toBeVisible();
+  await page.getByRole("slider").press("End");
+  await expect(page.getByTestId("mt-estado")).toHaveText("q_fin");
+  await expect(page.getByLabel("Próxima transición")).toContainText("Estado de aceptación");
+});
+
+test("mobile: fits a narrow viewport and keeps diagrams usable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Cultivo (maíz)" }).click();
+  await page.getByRole("button", { name: "Analizar", exact: true }).click();
+  await page.getByRole("tab", { name: "Máquina de Turing", exact: true }).click();
+  await expect(page.getByRole("img", { name: "Grafo de la máquina de Turing" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole("tabpanel").screenshot({ path: `${SCREENSHOTS}/05-mobile.png` });
+});
+
+test("voice: preserves pauses across browser restarts until seven seconds of silence", async ({ page }) => {
+  await page.clock.install({ time: new Date("2026-11-08T17:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-11-08T17:00:01Z"));
+  await page.addInitScript(() => {
+    class Recognition {
+      onresult: ((event: unknown) => void) | null = null;
+      onerror: ((event: unknown) => void) | null = null;
+      onend: (() => void) | null = null;
+      start() {
+        Object.assign(window, { __recognition: this });
+      }
+      stop() {
+        this.onend?.();
+      }
+    }
+    Object.assign(window, { SpeechRecognition: Recognition });
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Dictar por voz" }).click();
+  await page.evaluate(() => {
+    const r = (window as unknown as { __recognition: { onresult: (e: unknown) => void } }).__recognition;
+    r.onresult({
+      resultIndex: 0,
+      results: [Object.assign([{ transcript: "arriendo el lote 20" }], { isFinal: true })],
+    });
+  });
+  await page.clock.runFor(4_000);
+  await page.evaluate(() => (window as unknown as { __recognition: { onend: () => void } }).__recognition.onend());
+  await page.clock.runFor(2_999);
+  await expect(page.getByRole("button", { name: "Detener dictado" })).toBeVisible();
+  await page.clock.runFor(1);
+  await expect(page.getByRole("button", { name: "Dictar por voz" })).toBeVisible();
+  await expect(page.getByLabel("Texto del contrato")).toHaveValue("arriendo el lote 20");
 });

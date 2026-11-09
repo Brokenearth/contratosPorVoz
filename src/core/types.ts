@@ -18,7 +18,7 @@ export interface PdaStep { input: string; action: string; stack: string[] }
 export interface ParseTree { symbol: string; token?: Token; children: ParseTree[] }
 export interface ParseResult { ok: boolean; tree: ParseTree | null; trace: PdaStep[]; fields: ContractFields; errors: string[] }
 
-export interface TapeSnapshot { state: string; head: number; tape: string[]; note?: string }
+export interface TapeSnapshot { step: number; state: string; head: number; tape: string[]; note?: string }
 export interface TuringRun { accepted: boolean; steps: number; snapshots: TapeSnapshot[]; output: string }
 export interface TemplateDef { id: "PASTOREO" | "CULTIVO" | "MIXTA"; title: string; required: string[]; optional: string[]; body: string }
 export interface SelectionResult { templateId: TemplateDef["id"] | null; scores: Record<string, { matched: number; total: number }>; tie: boolean; low: boolean; run: TuringRun }

@@ -29,6 +29,7 @@ interface Props {
 
 export function Conversation({ result, onAnswer, onForce, source }: Props) {
   const [answer, setAnswer] = useState("");
+  const [listening, setListening] = useState(false);
   const { template, missing, question, contract, errors } = result;
   const complete = template !== null && missing.length === 0;
 
@@ -39,18 +40,21 @@ export function Conversation({ result, onAnswer, onForce, source }: Props) {
   }
 
   return (
-    <Panel id="dialogo" title="Campos detectados">
+    <Panel id="dialogo" title="Revise los datos">
       {template ? (
         <>
-          <p className="mb-2 text-sm">
+          <p className="review-template">
             Plantilla sugerida: <strong>{template.title}</strong>
           </p>
-          <ul aria-label="Campos requeridos" className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
+          <ul aria-label="Campos requeridos" className="review-fields">
             {template.required.map((key) => {
               const ok = !missing.includes(key);
               return (
-                <li key={key} className={ok ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"}>
-                  <span aria-hidden="true">{ok ? "✔" : "✘"}</span> {LABELS[key] ?? key}
+                <li key={key} className={ok ? "field-detected" : "field-missing"}>
+                  <span className={`field-state ${ok ? "is-complete" : "is-missing"}`}>
+                    {ok ? "Detectado" : "Falta"}
+                  </span>{" "}
+                  {LABELS[key] ?? key}
                   <span className="sr-only">{ok ? " (detectado)" : " (falta)"}</span>
                 </li>
               );
@@ -71,12 +75,13 @@ export function Conversation({ result, onAnswer, onForce, source }: Props) {
       )}
 
       {complete ? (
-        <p role="status" className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-200">
-          Todos los campos requeridos están completos. El contrato ya está generado en el panel «Contrato generado».
+        <p role="status" className="completion-note">
+          Todos los campos requeridos están completos. Revise el contrato generado y complete las firmas antes de
+          descargarlo.
         </p>
       ) : (
         <div className="mt-4 space-y-3">
-          <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm font-medium text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+          <p role="status" className="pending-note">
             {question}
           </p>
           <DictationField
@@ -87,13 +92,14 @@ export function Conversation({ result, onAnswer, onForce, source }: Props) {
             onChange={setAnswer}
             placeholder="Ej.: desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos"
             source={source}
+            onListeningChange={setListening}
           />
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn-primary" onClick={submit} disabled={!answer.trim()}>
+            <button type="button" className="btn-primary" onClick={submit} disabled={!answer.trim() || listening}>
               Responder
             </button>
             {template && !contract && (
-              <button type="button" className="btn-secondary" onClick={onForce}>
+              <button type="button" className="btn-secondary" onClick={onForce} disabled={listening}>
                 Generar de todos modos
               </button>
             )}

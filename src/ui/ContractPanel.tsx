@@ -1,22 +1,19 @@
 import { useState } from "react";
 import type { TemplateDef } from "../core/types";
-import { Markdown } from "./Markdown";
+import { Icon } from "./Icon";
+import { Markdown, headingId, parseBlocks } from "./Markdown";
 import { Panel } from "./Panel";
 
 interface Props {
   markdown: string;
   template: TemplateDef;
 }
-
-export function contractFileName(template: TemplateDef): string {
-  return `contrato-${template.id.toLowerCase()}.md`;
-}
-
-function download(markdown: string, fileName: string) {
+export const contractFileName = (template: TemplateDef) => `contrato-${template.id.toLowerCase()}.md`;
+function download(markdown: string, name: string) {
   const url = URL.createObjectURL(new Blob([markdown], { type: "text/markdown;charset=utf-8" }));
   const link = document.createElement("a");
   link.href = url;
-  link.download = fileName;
+  link.download = name;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -25,42 +22,62 @@ function download(markdown: string, fileName: string) {
 
 export function ContractPanel({ markdown, template }: Props) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const pending = (markdown.match(/\{\{[^}]+\}\}/g) ?? []).length;
-
+  const sections = parseBlocks(markdown).filter((b) => b.kind === "heading" && b.level === 2);
   async function copy() {
     try {
       await navigator.clipboard.writeText(markdown);
       setCopied(true);
+      setCopyError(false);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setCopied(false);
+      setCopyError(true);
     }
   }
-
   return (
     <Panel
       title="Contrato generado"
       id="contrato"
-      actions={
-        <div className="flex gap-2">
-          <button type="button" className="btn-primary" onClick={() => download(markdown, contractFileName(template))}>
-            Descargar .md
-          </button>
-          <button type="button" className="btn-secondary" onClick={() => void copy()}>
-            {copied ? "¡Copiado!" : "Copiar"}
-          </button>
-        </div>
-      }
+      actions={<span className="status-tag">{template.id.toLowerCase()}</span>}
     >
-      <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-        Plantilla: <strong>{template.title}</strong>
-        {pending > 0 && (
-          <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
-            {pending} campo(s) pendiente(s) resaltado(s)
-          </span>
-        )}
-      </p>
-      <article aria-label="Contrato" className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-950">
+      <div className="document-actions">
+        <button type="button" className="btn-primary" onClick={() => download(markdown, contractFileName(template))}>
+          <Icon name="download" />
+          Descargar .md
+        </button>
+        <button type="button" className="btn-secondary" onClick={() => void copy()}>
+          <Icon name="copy" />
+          {copied ? "Copiado" : "Copiar"}
+        </button>
+      </div>
+      {copyError && (
+        <p role="alert" className="field-error">
+          No se pudo copiar. Puede descargar el documento.
+        </p>
+      )}
+      {pending > 0 && (
+        <p className="pending-note">
+          {pending} {pending === 1 ? "campo pendiente" : "campos pendientes"}. Revise los espacios resaltados en el
+          documento.
+        </p>
+      )}
+      <details className="contract-index">
+        <summary>Orden del documento</summary>
+        <nav aria-label="Secciones del contrato">
+          <ol>
+            {sections.map(
+              (s) =>
+                s.kind === "heading" && (
+                  <li key={s.text}>
+                    <a href={`#${headingId(s.text)}`}>{s.text}</a>
+                  </li>
+                ),
+            )}
+          </ol>
+        </nav>
+      </details>
+      <article aria-label="Contrato" tabIndex={0} className="contract-paper">
         <Markdown source={markdown} />
       </article>
     </Panel>

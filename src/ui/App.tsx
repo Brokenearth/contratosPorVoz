@@ -3,14 +3,13 @@ import { runPipeline, type PipelineResult } from "../core/pipeline";
 import type { ContractFields } from "../core/types";
 import { ContractPanel } from "./ContractPanel";
 import { Conversation } from "./Conversation";
+import { Icon } from "./Icon";
 import { InputPanel } from "./InputPanel";
 import { TheoryTabs } from "./theory/TheoryTabs";
 import type { InputSource } from "./voice";
 
 interface Analysis {
-  /** Text of the last analyzed utterance (initial dictation or an answer). */
   input: string;
-  /** Fields known before that utterance. */
   previous: ContractFields;
   result: PipelineResult;
   id: number;
@@ -30,50 +29,116 @@ export function App({ source }: { source?: InputSource }) {
   }
 
   const result = analysis?.result;
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold">Contratos rurales por voz</h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Arrendamiento de lotes para pastoreo y cultivo, del dictado al contrato.
-            </p>
-          </div>
-          <p role="note" className="rounded-lg bg-amber-100 px-3 py-2 text-sm font-medium text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
-            ⚖️ Borrador informativo; no reemplaza la asesoría de un abogado
-          </p>
+    <div className="app-shell">
+      <header className="site-header">
+        <div className="header-inner">
+          <a className="brand" href="#redactar">
+            <span className="brand-symbol">
+              <Icon name="document" />
+            </span>
+            <span>
+              Contratos rurales <span className="brand-light">por voz</span>
+            </span>
+          </a>
+          <nav aria-label="Navegación principal">
+            <a href="#redactar">Redactar</a>
+            {analysis && <a href="#teoria">Cómo funciona</a>}
+          </nav>
+          <span className="course-label">Lenguajes y autómatas</span>
         </div>
       </header>
-
-      <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-2">
-        <div className="min-w-0 space-y-6">
-          <InputPanel text={text} onTextChange={setText} onAnalyze={() => analyze(text, {})} source={source} />
-          {analysis && result && (
-            <Conversation
-              key={analysis.id}
-              result={result}
-              source={source}
-              onAnswer={(answer) => analyze(answer, result.fields)}
-              onForce={() => analyze(analysis.input, analysis.previous, true)}
-            />
-          )}
+      <main className="workspace">
+        <div className="workspace-intro" id="redactar">
+          <div>
+            <p className="eyebrow">ARRENDAMIENTO RURAL</p>
+            <h1>Contratos rurales por voz</h1>
+            <p>Cuente lo que necesita acordar. Dé forma a su contrato, paso a paso.</p>
+          </div>
+          <ol className="workflow" aria-label="Etapas del contrato">
+            {["Redacción", "Revisión", "Documento"].map((label, i) => (
+              <li
+                key={label}
+                aria-current={(result?.contract ? i === 2 : result ? i === 1 : i === 0) ? "step" : undefined}
+              >
+                <span>0{i + 1}</span>
+                {label}
+              </li>
+            ))}
+          </ol>
         </div>
-        <div className="min-w-0 space-y-6">
-          {result?.contract && result.template ? (
-            <ContractPanel markdown={result.contract.output} template={result.template} />
-          ) : (
-            <section className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-              El contrato aparecerá aquí cuando estén todos los campos requeridos (o pulse «Generar de todos modos»).
-            </section>
-          )}
+        <div className="editor-layout">
+          <div className="editor-column">
+            <InputPanel text={text} onTextChange={setText} onAnalyze={() => analyze(text, {})} source={source} />
+            {analysis && result && (
+              <Conversation
+                key={analysis.id}
+                result={result}
+                source={source}
+                onAnswer={(answer) => analyze(answer, result.fields)}
+                onForce={() => analyze(analysis.input, analysis.previous, true)}
+              />
+            )}
+          </div>
+          <div className="document-column">
+            {result?.contract && result.template ? (
+              <ContractPanel markdown={result.contract.output} template={result.template} />
+            ) : (
+              <section className="document-empty" aria-label="Vista previa del contrato">
+                <div className="document-empty-heading">
+                  <span className="eyebrow">SU DOCUMENTO</span>
+                  <span className="status-tag">{result ? "Datos por completar" : "Aún sin generar"}</span>
+                </div>
+                <div className="paper-preview">
+                  <span className="paper-category">CONTRATO DE ARRENDAMIENTO RURAL</span>
+                  <h2>
+                    Un acuerdo claro,
+                    <br />
+                    desde el principio.
+                  </h2>
+                  <p>El documento se organizará con los datos de su redacción.</p>
+                  <ol className="document-outline">
+                    {[
+                      "Las partes del acuerdo",
+                      "El lote y su destinación",
+                      "Duración y valor",
+                      "Obligaciones y condiciones",
+                      "Firmas",
+                    ].map((t, i) => (
+                      <li key={t}>
+                        <span>0{i + 1}</span>
+                        {t}
+                        <span className="outline-line" />
+                      </li>
+                    ))}
+                  </ol>
+                  <div className="paper-signatures" aria-hidden="true">
+                    <span>ARRENDADOR</span>
+                    <span>ARRENDATARIO</span>
+                  </div>
+                </div>
+                <p className="document-empty-note">
+                  {result
+                    ? "Complete los datos solicitados para generar el contrato."
+                    : "Empiece con su redacción o cargue un ejemplo para explorar el proceso."}
+                </p>
+              </section>
+            )}
+          </div>
         </div>
         {analysis && result && (
-          <div className="min-w-0 lg:col-span-2">
-            <TheoryTabs result={result} runId={analysis.id} />
-          </div>
+          <TheoryTabs
+            key={analysis.id}
+            result={result}
+            runId={analysis.id}
+            input={analysis.input}
+            isAnswer={Object.keys(analysis.previous).length > 0}
+          />
         )}
+        <footer className="site-footer">
+          <span>Contratos rurales por voz</span>
+          <span>Del lenguaje natural a los modelos de cómputo.</span>
+        </footer>
       </main>
     </div>
   );

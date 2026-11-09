@@ -38,7 +38,7 @@ describe("TEMPLATES", () => {
     expect(getTemplate("CULTIVO").required).toContain("insumos");
   });
 
-  it.each(TEMPLATES)("$id contains the fixed clauses and the draft legend", (template) => {
+  it.each(TEMPLATES)("$id preserves the clauses without the draft notice", (template) => {
     for (const text of [
       "Objeto",
       "Duración",
@@ -48,9 +48,9 @@ describe("TEMPLATES", () => {
       "Terminación",
       "Resolución de conflictos",
       "FIRMAS",
-      "no reemplaza",
     ]) {
       expect(template.body).toContain(text);
+      expect(template.body).not.toMatch(/borrador|generado automáticamente/i);
     }
   });
 

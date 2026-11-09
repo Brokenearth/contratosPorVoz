@@ -34,12 +34,15 @@ interface Recognition {
   onresult: ((event: RecognitionEvent) => void) | null;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
+  onspeechstart: (() => void) | null;
+  onspeechend: (() => void) | null;
   start: () => void;
   stop: () => void;
 }
 type RecognitionConstructor = new () => Recognition;
 
 export const SPEECH_LANG = "es-CO";
+export const SILENCE_TIMEOUT_MS = 7_000;
 
 function recognitionConstructor(): RecognitionConstructor | undefined {
   if (typeof window === "undefined") return undefined;
@@ -54,7 +57,7 @@ export function isSpeechSupported(): boolean {
   return recognitionConstructor() !== undefined;
 }
 
-/** Listens with the Web Speech API (es-CO), reporting interim and final text. */
+/** Keeps one dictation session alive across browser restarts, until seven seconds of silence. */
 export function startListening(handlers: ListenHandlers): () => void {
   const Ctor = recognitionConstructor();
   if (!Ctor) {
@@ -65,8 +68,60 @@ export function startListening(handlers: ListenHandlers): () => void {
   const recognition = new Ctor();
   recognition.lang = SPEECH_LANG;
   recognition.interimResults = true;
-  recognition.continuous = false;
+  recognition.continuous = true;
+  let stopping = false;
+  let ended = false;
+  let speaking = false;
+  let silenceTimer: ReturnType<typeof setTimeout> | undefined;
+  let endTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function finish() {
+    if (ended) return;
+    ended = true;
+    clearTimeout(silenceTimer);
+    clearTimeout(endTimer);
+    handlers.onEnd();
+  }
+
+  function stop() {
+    if (stopping || ended) return;
+    stopping = true;
+    clearTimeout(silenceTimer);
+    // Allow the final result to arrive before releasing the session.
+    endTimer = setTimeout(finish, 1_000);
+    try {
+      recognition.stop();
+    } catch {
+      finish();
+    }
+  }
+
+  function waitForSilence() {
+    clearTimeout(silenceTimer);
+    if (!stopping && !ended) silenceTimer = setTimeout(stop, SILENCE_TIMEOUT_MS);
+  }
+
+  function start() {
+    try {
+      recognition.start();
+    } catch {
+      handlers.onError("No se pudo iniciar el micrófono. Intente dictar de nuevo.");
+      finish();
+    }
+  }
+
+  recognition.onspeechstart = () => {
+    speaking = true;
+    clearTimeout(silenceTimer);
+    silenceTimer = undefined;
+  };
+  recognition.onspeechend = () => {
+    speaking = false;
+    waitForSilence();
+  };
   recognition.onresult = (event) => {
+    if (ended) return;
+    if (!speaking) waitForSilence();
     let interim = "";
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const result = event.results[i];
@@ -76,10 +131,26 @@ export function startListening(handlers: ListenHandlers): () => void {
     }
     if (interim) handlers.onInterim(interim.trim());
   };
-  recognition.onerror = (event) => handlers.onError(`Error de reconocimiento de voz: ${event.error}`);
-  recognition.onend = () => handlers.onEnd();
-  recognition.start();
-  return () => recognition.stop();
+  recognition.onerror = (event) => {
+    if (ended || event.error === "no-speech") return;
+    stopping = true;
+    handlers.onError(`Error de reconocimiento de voz: ${event.error}`);
+    finish();
+  };
+  recognition.onend = () => {
+    if (stopping || ended) {
+      finish();
+      return;
+    }
+    speaking = false;
+    // Some browsers close recognition between phrases even in continuous mode.
+    // Preserve the silence deadline and the accumulated text when restarting.
+    if (!silenceTimer) waitForSilence();
+    start();
+  };
+  waitForSilence();
+  start();
+  return stop;
 }
 
 export const speechInput: InputSource = {
@@ -88,16 +159,3 @@ export const speechInput: InputSource = {
   },
   start: startListening,
 };
-
-export function isSynthesisSupported(): boolean {
-  return typeof window !== "undefined" && "speechSynthesis" in window;
-}
-
-/** Reads `text` aloud in Spanish (no-op when speech synthesis is unavailable). */
-export function speak(text: string): void {
-  if (!isSynthesisSupported()) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = SPEECH_LANG;
-  window.speechSynthesis.speak(utterance);
-}

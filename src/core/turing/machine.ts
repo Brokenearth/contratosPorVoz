@@ -52,7 +52,8 @@ export function runMachine(machine: TuringMachine, input: string[], options: Run
   let state = machine.start;
   let steps = 0;
 
-  const snap = (note?: string) => snapshots.push({ state, head, tape: [...tape], ...(note ? { note } : {}) });
+  const snap = (note?: string) =>
+    snapshots.push({ step: steps, state, head, tape: [...tape], ...(note ? { note } : {}) });
   snap("inicio");
 
   while (!machine.accept.includes(state)) {
