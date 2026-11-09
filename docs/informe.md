@@ -15,7 +15,7 @@ exige escribir bastante y conocer fórmulas legales, lo que es una barrera para 
 experiencia digital. Hablar, en cambio, es natural. El proyecto construye una aplicación web en la que
 el usuario **dicta** las condiciones del arriendo (por ejemplo, _"arriendo lote La Esperanza de 5
 hectáreas para 20 vacas de raza holstein para producción de leche por 12 meses"_) y obtiene un
-**borrador de contrato** en Markdown listo para revisar.
+**contrato** en Markdown listo para revisar.
 
 El objetivo académico es aplicar, en un mismo sistema, los modelos de la materia: expresiones
 regulares y autómatas finitos (análisis léxico), gramáticas libres de contexto y autómatas a pila
@@ -1184,7 +1184,7 @@ sus campos; el diálogo y la MT de selección los leen de ahí, sin listas fijas
 | MIXTA | lote, hectareas, tipo_animal, cantidad_animales, raza, fecha, uso, cultivo, insumos, duracion, valor | arrendador, arrendatario, animales_descripcion |
 
 Todas tienen cláusulas fijas de objeto, destinación, duración, precio y forma de pago, obligaciones de
-las partes, terminación y resolución de conflictos, más la leyenda de borrador. Los valores se
+las partes, terminación y resolución de conflictos. Los valores se
 sustituyen con `{{campo}}`; las cláusulas opcionales van entre `[[?campo]] … [[/campo]]` y la MT las
 borra si el campo no se dijo. Volver obligatorio un campo es mover su nombre de `opcionales` a
 `requeridos`: no hay que tocar la gramática ni los autómatas.
@@ -1238,6 +1238,15 @@ espacio o con coma, y exige la misma plantilla y los mismos campos sin avisos. A
 en mixta (9 cláusulas), todas aceptadas. La puerta de calidad completa es
 `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:e2e`.
 
+### 8.1 Interfaz de exploración
+
+La interfaz separa redacción, revisión de datos y documento. El índice del contrato permite saltar
+a sus secciones; las instrucciones permanecen escritas y el dictado se cierra tras siete segundos
+de silencio. El AFD, las dos pilas y las máquinas de Turing usan los datos y trazas del núcleo.
+El AFD permite probar cadenas y ver aceptación o rechazo; la pila permite reproducir cada acción.
+La MT muestra cinta, cabezal y próxima transición, además del grafo de familias visitadas.
+Una instantánea de MT puede abarcar varias transiciones; cada una informa su contador real.
+
 ## 9. Limitaciones
 
 - **Voz.** Se usa la Web Speech API del navegador (Chrome o Edge, con conexión a internet). Puede
@@ -1250,8 +1259,7 @@ en mixta (9 cláusulas), todas aceptadas. La puerta de calidad completa es
   Los números en letras llegan hasta "veinte"; los montos se dicen como "6 millones de pesos".
 - **Nombres.** Una palabra desconocida es `NOMBRE`; un nombre que coincide con una palabra del
   vocabulario (p. ej. un lote llamado "La Ceba") se clasifica con esa otra categoría.
-- **Validez jurídica.** El resultado es un **borrador** informativo: no reemplaza la revisión de un
-  abogado, no verifica identidades ni incluye firma digital.
+- **Validez jurídica.** La aplicación no verifica identidades ni incluye firma digital.
 
 ## 10. Conclusiones
 
@@ -1282,4 +1290,4 @@ plantillas hace que el sistema se adapte a requisitos legales sin tocar los aut�
 
 ---
 
-_Este proyecto genera borradores informativos y no reemplaza la asesoría de un abogado._
+_La aplicación organiza contratos rurales a partir de voz o texto y permite explorar los modelos formales que los procesan._

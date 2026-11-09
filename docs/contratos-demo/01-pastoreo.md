@@ -1,4 +1,5 @@
 <!-- Generado por `pnpm docs:generate` a partir de la frase dictada; no editar a mano. -->
+
 > **Frase dictada:** arriendo lote La Esperanza de 5 hectáreas para 20 vacas de raza holstein para producción de leche por 12 meses desde el 15 de noviembre de 2026 por un valor de 6 millones de pesos
 >
 > **Tokens:** [VERBO:arriendo] [PALABRA_CLAVE:lote] [PALABRA_CLAVE:La] [NOMBRE:Esperanza] [PALABRA_CLAVE:de] [NUM:5] [UNIDAD_AREA:hectáreas] [PALABRA_CLAVE:para] [NUM:20] [ANIMAL:vacas] [PALABRA_CLAVE:de] [PALABRA_CLAVE:raza] [RAZA:holstein] [PALABRA_CLAVE:para] [USO:producción] [PALABRA_CLAVE:de] [USO:leche] [PALABRA_CLAVE:por] [NUM:12] [UNIDAD_TIEMPO:meses] [PALABRA_CLAVE:desde] [PALABRA_CLAVE:el] [NUM:15] [PALABRA_CLAVE:de] [MES:noviembre] [PALABRA_CLAVE:de] [NUM:2026] [PALABRA_CLAVE:por] [PALABRA_CLAVE:un] [PALABRA_CLAVE:valor] [PALABRA_CLAVE:de] [NUM:6] [MONEDA:millones] [PALABRA_CLAVE:de] [MONEDA:pesos]
@@ -8,8 +9,6 @@
 ---
 
 # CONTRATO DE ARRENDAMIENTO DE LOTE PARA PASTOREO
-
-> **Borrador generado automáticamente.** Este documento es un borrador de referencia y no reemplaza la asesoría de un abogado. Revíselo antes de firmarlo.
 
 ## Partes
 
@@ -51,8 +50,8 @@ CLÁUSULA OCTAVA. Las diferencias que surjan entre las partes por causa de este 
 
 Para constancia se firma en dos ejemplares del mismo tenor.
 
-| EL ARRENDADOR | EL ARRENDATARIO |
-| --- | --- |
+| EL ARRENDADOR                  | EL ARRENDATARIO                |
+| ------------------------------ | ------------------------------ |
 | ______________________________ | ______________________________ |
-| ____________________ | ____________________ |
-| C.C. ____________________ | C.C. ____________________ |
+| ____________________           | ____________________           |
+| C.C. ____________________      | C.C. ____________________      |

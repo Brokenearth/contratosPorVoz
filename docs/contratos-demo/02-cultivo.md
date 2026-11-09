@@ -1,4 +1,5 @@
 <!-- Generado por `pnpm docs:generate` a partir de la frase dictada; no editar a mano. -->
+
 > **Frase dictada:** arriendo el lote El Porvenir de 3 hectáreas para cultivo de maíz desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos, los insumos los aporta el arrendatario por 6 meses
 >
 > **Tokens:** [VERBO:arriendo] [PALABRA_CLAVE:el] [PALABRA_CLAVE:lote] [PALABRA_CLAVE:El] [NOMBRE:Porvenir] [PALABRA_CLAVE:de] [NUM:3] [UNIDAD_AREA:hectáreas] [PALABRA_CLAVE:para] [USO:cultivo] [PALABRA_CLAVE:de] [CULTIVO:maíz] [PALABRA_CLAVE:desde] [PALABRA_CLAVE:el] [NUM:1] [PALABRA_CLAVE:de] [MES:diciembre] [PALABRA_CLAVE:de] [NUM:2026] [PALABRA_CLAVE:por] [PALABRA_CLAVE:un] [PALABRA_CLAVE:valor] [PALABRA_CLAVE:de] [NUM:2] [MONEDA:millones] [PALABRA_CLAVE:de] [MONEDA:pesos] [COMA:,] [PALABRA_CLAVE:los] [INSUMOS:insumos] [PALABRA_CLAVE:los] [PALABRA_CLAVE:aporta] [PALABRA_CLAVE:el] [PALABRA_CLAVE:arrendatario] [PALABRA_CLAVE:por] [NUM:6] [UNIDAD_TIEMPO:meses]
@@ -8,8 +9,6 @@
 ---
 
 # CONTRATO DE ARRENDAMIENTO DE LOTE PARA CULTIVO
-
-> **Borrador generado automáticamente.** Este documento es un borrador de referencia y no reemplaza la asesoría de un abogado. Revíselo antes de firmarlo.
 
 ## Partes
 
@@ -51,8 +50,8 @@ CLÁUSULA OCTAVA. Las diferencias que surjan entre las partes por causa de este 
 
 Para constancia se firma en dos ejemplares del mismo tenor.
 
-| EL ARRENDADOR | EL ARRENDATARIO |
-| --- | --- |
+| EL ARRENDADOR                  | EL ARRENDATARIO                |
+| ------------------------------ | ------------------------------ |
 | ______________________________ | ______________________________ |
-| ____________________ | ____________________ |
-| C.C. ____________________ | C.C. ____________________ |
+| ____________________           | ____________________           |
+| C.C. ____________________      | C.C. ____________________      |

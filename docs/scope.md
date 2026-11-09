@@ -6,7 +6,7 @@ resume la propuesta y fija las decisiones que ella deja abiertas. Proyecto acad�
 ## Decisiones
 - App web única: **Vite 7 + React 19 + TypeScript estricto + Tailwind CSS 4**, sin backend. Node 24, pnpm 9.
 - Voz: **Web Speech API** del navegador (`SpeechRecognition`, `lang: es-CO`), detrás de una interfaz intercambiable
-  `InputSource`; el cuadro de texto siempre funciona (plan B, §4.1). Lectura en voz alta de la guía con `speechSynthesis` (opcional).
+  `InputSource`; el cuadro de texto siempre funciona (plan B, §4.1). Instrucciones escritas; reconocimiento continuo con cierre tras 7 segundos de silencio.
 - Núcleo formal en `src/core/` **sin React ni dependencias**: implementación propia (sin generadores, sin `RegExp` de JS
   para reconocer tokens) de: ER → AFN (Thompson) → AFD (subconjuntos) para el léxico; GLC + **autómata a pila** para el
   sintáctico; **máquina de Turing** para la selección de plantilla y el relleno.
@@ -48,7 +48,7 @@ interface PdaStep { input: string; action: string; stack: string[] }   // pila t
 interface ParseTree { symbol: string; token?: Token; children: ParseTree[] }
 interface ParseResult { ok: boolean; tree: ParseTree | null; trace: PdaStep[]; fields: ContractFields; errors: string[] }
 
-interface TapeSnapshot { state: string; head: number; tape: string[]; note?: string }
+interface TapeSnapshot { step: number; state: string; head: number; tape: string[]; note?: string }
 interface TuringRun { accepted: boolean; steps: number; snapshots: TapeSnapshot[]; output: string }
 interface TemplateDef { id: "PASTOREO" | "CULTIVO" | "MIXTA"; title: string; required: string[]; optional: string[]; body: string }
 interface SelectionResult { templateId: TemplateDef["id"] | null; scores: Record<string, { matched: number; total: number }>; tie: boolean; low: boolean; run: TuringRun }
@@ -78,7 +78,7 @@ ejecución tiene `maxSteps`.
    plantilla: sustituye `{{campo}}`, deja `{{campo}}` pendiente si falta un obligatorio, y **borra** la sección de una
    cláusula opcional ausente (marcada `[[?campo]] … [[/campo]]`). Salida `.md` descargable.
 6. **Plantillas (§6)**: PASTOREO, CULTIVO, MIXTA con cláusulas fijas (objeto, destinación, duración, precio y forma de
-   pago, obligaciones de las partes, terminación, resolución de conflictos) y la leyenda "borrador; no reemplaza a un abogado".
+   pago, obligaciones de las partes, terminación y resolución de conflictos).
    El ejemplo de §6 produce la CLÁUSULA SEGUNDA indicada.
 7. **UI**: entrada por voz (botón micrófono, texto reconocido editable antes de generar, §9) o texto; visualización de
    tokens, AFD de un token, árbol de derivación, traza de la pila, cinta de la MT paso a paso (play/pausa/paso), puntajes

@@ -1,13 +1,11 @@
 # Contratos rurales por voz
 
-Aplicación web que redacta **borradores de contratos de arrendamiento rural** a partir de lo que una
+Aplicación web que redacta **contratos de arrendamiento rural** a partir de lo que una
 persona dicta por voz (o escribe). Proyecto académico de Lenguajes de Programación: el texto pasa por
 un analizador léxico hecho con **expresiones regulares → AFN (Thompson) → AFD (subconjuntos)**, un
 analizador sintáctico con **gramática libre de contexto y autómata a pila**, y dos **máquinas de
 Turing**: una elige la plantilla (pastoreo, cultivo o mixta) y otra la rellena. La interfaz muestra
 los tokens, el AFD de un token, el árbol de derivación, la pila y la cinta de la MT paso a paso.
-
-> El resultado es un borrador informativo y **no reemplaza la asesoría de un abogado**.
 
 ## Requisitos
 
@@ -33,14 +31,16 @@ Para una versión de producción: `pnpm build` y `pnpm preview`.
 3. Genere el contrato. Si faltan datos obligatorios, el sistema pregunta solo por ellos
    (p. ej. "Falta la fecha y para qué se usará el lote."); responda por voz o texto y se fusionan con
    lo ya dicho.
-4. Revise las pestañas de teoría (tokens, AFD, árbol, pila, cinta de la MT, puntajes de plantillas) y
-   descargue el contrato en `.md`.
+4. Revise el documento y use **Orden del documento** para navegar por sus cláusulas. Descárguelo en `.md` o copie su contenido.
+5. Explore **Cómo funciona por dentro**: tokens, recorrido del AFD, árbol, pila, selección y máquina de Turing. Todos los simuladores incluyen pasos, reproducción, pausa y reinicio.
 
-Puede mencionar los datos **en cualquier orden**: animales (cantidad, tipo y raza), lote (número o
+Las instrucciones sugieren este orden: **lote y uso → condiciones (fecha, duración y valor) → partes**.
+También puede mencionar los datos **en cualquier orden**: animales (cantidad, tipo y raza), lote (número o
 nombre) y hectáreas, fecha de inicio, duración, valor, uso, cultivo, quién aporta los insumos y los
 nombres del arrendador y del arrendatario.
 
 También entiende **sinónimos** gracias a un diccionario (`src/core/lexer/synonyms.ts`). Por ejemplo:
+
 - "a partir del" equivale a "desde el".
 - "por un plazo de" equivale a "por".
 - "finca" o "predio" equivalen a "lote".
@@ -76,14 +76,14 @@ Los contratos resultantes de estas frases están en [`docs/contratos-demo/`](doc
 
 ## Comandos
 
-| Comando | Qué hace |
-| --- | --- |
-| `pnpm dev` | servidor de desarrollo |
-| `pnpm lint` | ESLint |
-| `pnpm typecheck` | TypeScript estricto (`tsc --noEmit`) |
-| `pnpm test` | pruebas unitarias y de componentes (Vitest) |
-| `pnpm build` | typecheck + compilación de producción |
-| `pnpm test:e2e` | pruebas extremo a extremo (Playwright; la primera vez: `pnpm exec playwright install chromium`) |
+| Comando              | Qué hace                                                                                                               |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`           | servidor de desarrollo                                                                                                 |
+| `pnpm lint`          | ESLint                                                                                                                 |
+| `pnpm typecheck`     | TypeScript estricto (`tsc --noEmit`)                                                                                   |
+| `pnpm test`          | pruebas unitarias y de componentes (Vitest)                                                                            |
+| `pnpm build`         | typecheck + compilación de producción                                                                                  |
+| `pnpm test:e2e`      | pruebas extremo a extremo (Playwright; la primera vez: `pnpm exec playwright install chromium`)                        |
 | `pnpm docs:generate` | regenera las tablas, diagramas y trazas del informe, `docs/automatas.md` y los contratos de demo usando el código real |
 
 ## Estructura
@@ -110,3 +110,33 @@ docs/                propuesta, alcance, informe, autómatas y contratos de demo
 - Contratos de demostración (entregable 3): [pastoreo](docs/contratos-demo/01-pastoreo.md),
   [cultivo](docs/contratos-demo/02-cultivo.md), [mixta](docs/contratos-demo/03-mixta.md).
 - [Propuesta](docs/propuesta.pdf) y [alcance](docs/scope.md).
+
+## Interfaz y simuladores
+
+- Instrucciones escritas, sin lectura de guía en voz alta.
+- Interfaz adaptable a móvil y escritorio, iconos vectoriales y documento con tipografía de lectura.
+- **AFD:** use un token del texto o escriba una cadena. Recorra sus caracteres y vea dónde se acepta o rechaza. Puede alternar entre el recorrido y el grafo completo; las tablas AFN/AFD están en el detalle técnico.
+- **Pila:** avance por la traza real. El tope aparece arriba; se muestran la pila de símbolos y los marcadores Z0/SUB por separado. El ejemplo «Pastoreo anidado» permite observar cómo se apila SUB y cómo «fin» lo retira.
+- **MT:** observe la cinta, el cabezal y la próxima transición (lectura, escritura, movimiento y estado). El grafo agrupa familias de estados visitadas; no pretende representar todas las transiciones posibles. Las instantáneas se registran al cambiar de familia y muestran el número de transición real, de modo que avanzar una instantánea puede avanzar varias transiciones.
+- Los tokens, el árbol y la pila analizan la última entrada; las máquinas de selección y llenado usan los datos acumulados cuando se responde por un campo faltante.
+
+## Copia local e historial
+
+Esta copia se importó desde el ZIP original. El primer commit conserva esa versión y los siguientes
+registran los cambios; el historial anterior de GitHub no está incluido en el ZIP de origen.
+La rama de trabajo es `mejoras-interfaz-y-visualizaciones`. El remoto `origin` conserva la URL original.
+
+```bash
+git log --oneline
+pnpm install --frozen-lockfile
+pnpm test
+pnpm build
+pnpm test:e2e
+```
+
+Las pruebas de voz simulan la Web Speech API y el reloj. La transcripción real depende del servicio
+del navegador y del permiso de micrófono. Para usar un Chromium ya instalado en las pruebas E2E:
+
+```bash
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm test:e2e
+```

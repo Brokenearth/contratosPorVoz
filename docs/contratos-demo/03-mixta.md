@@ -1,4 +1,5 @@
 <!-- Generado por `pnpm docs:generate` a partir de la frase dictada; no editar a mano. -->
+
 > **Frase dictada:** arriendo el lote 4 de 10 hectáreas para 15 vacas de raza gir para ganadería de leche y para cultivo de maíz por 1 año desde el 1 de marzo de 2027 por un valor de 8 millones de pesos, los insumos los aporta el arrendador
 >
 > **Tokens:** [VERBO:arriendo] [PALABRA_CLAVE:el] [PALABRA_CLAVE:lote] [NUM:4] [PALABRA_CLAVE:de] [NUM:10] [UNIDAD_AREA:hectáreas] [PALABRA_CLAVE:para] [NUM:15] [ANIMAL:vacas] [PALABRA_CLAVE:de] [PALABRA_CLAVE:raza] [RAZA:gir] [PALABRA_CLAVE:para] [USO:ganadería] [PALABRA_CLAVE:de] [USO:leche] [CONECTOR:y] [PALABRA_CLAVE:para] [USO:cultivo] [PALABRA_CLAVE:de] [CULTIVO:maíz] [PALABRA_CLAVE:por] [NUM:1] [UNIDAD_TIEMPO:año] [PALABRA_CLAVE:desde] [PALABRA_CLAVE:el] [NUM:1] [PALABRA_CLAVE:de] [MES:marzo] [PALABRA_CLAVE:de] [NUM:2027] [PALABRA_CLAVE:por] [PALABRA_CLAVE:un] [PALABRA_CLAVE:valor] [PALABRA_CLAVE:de] [NUM:8] [MONEDA:millones] [PALABRA_CLAVE:de] [MONEDA:pesos] [COMA:,] [PALABRA_CLAVE:los] [INSUMOS:insumos] [PALABRA_CLAVE:los] [PALABRA_CLAVE:aporta] [PALABRA_CLAVE:el] [PALABRA_CLAVE:arrendador]
@@ -8,8 +9,6 @@
 ---
 
 # CONTRATO DE ARRENDAMIENTO MIXTO DE LOTE (PASTOREO Y CULTIVO)
-
-> **Borrador generado automáticamente.** Este documento es un borrador de referencia y no reemplaza la asesoría de un abogado. Revíselo antes de firmarlo.
 
 ## Partes
 
@@ -51,8 +50,8 @@ CLÁUSULA OCTAVA. Las diferencias que surjan entre las partes por causa de este 
 
 Para constancia se firma en dos ejemplares del mismo tenor.
 
-| EL ARRENDADOR | EL ARRENDATARIO |
-| --- | --- |
+| EL ARRENDADOR                  | EL ARRENDATARIO                |
+| ------------------------------ | ------------------------------ |
 | ______________________________ | ______________________________ |
-| ____________________ | ____________________ |
-| C.C. ____________________ | C.C. ____________________ |
+| ____________________           | ____________________           |
+| C.C. ____________________      | C.C. ____________________      |
