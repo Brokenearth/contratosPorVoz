@@ -8,14 +8,15 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:e2e": "playwright test",
-    "docs:generate": "node scripts/docs-runner.mjs"
+    "dev": "vite --config config/vite.config.ts",
+    "build": "tsc --noEmit && vite build --config config/vite.config.ts",
+    "preview": "vite preview --config config/vite.config.ts",
+    "lint": "eslint --config config/eslint.config.js .",
+    "typecheck": "tsc --noEmit && tsc -p config/tsconfig.tests.json",
+    "test": "vitest run --config config/vitest.config.ts",
+    "test:e2e": "playwright test --config config/playwright.config.ts",
+    "docs:generate": "node scripts/docs-runner.mjs",
+    "format": "prettier --config config/prettier.json --write src tests config scripts README.md docs/*.md"
   },
   "dependencies": {
     "react": "^19",

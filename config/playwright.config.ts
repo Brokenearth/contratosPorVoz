@@ -3,7 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = 5180;
 
 export default defineConfig({
-  testDir: "e2e",
+  testDir: "../tests/e2e",
+  outputDir: "../test-results/e2e",
   fullyParallel: true,
   reporter: "list",
   use: {
@@ -13,7 +14,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: `node node_modules/vite/bin/vite.js --port ${PORT} --strictPort`,
+    command: `node node_modules/vite/bin/vite.js --config config/vite.config.ts --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: true,
     timeout: 60_000,

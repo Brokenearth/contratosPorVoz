@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_PHRASES, runPipeline } from "./pipeline";
+import { DEMO_PHRASES, runPipeline } from "../../../src/core/pipeline";
 
 /** Collapses the nesting-marker stack trace into its distinct consecutive states. */
 function markerHistory(steps: { stack: string[] }[]): string[] {

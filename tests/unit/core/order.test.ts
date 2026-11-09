@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { tokenize } from "./lexer";
-import { parseContract } from "./parser";
-import { runPipeline } from "./pipeline";
-import type { ContractFields } from "./types";
+import { tokenize } from "../../../src/core/lexer";
+import { parseContract } from "../../../src/core/parser";
+import { runPipeline } from "../../../src/core/pipeline";
+import type { ContractFields } from "../../../src/core/types";
 
 /** Fields with sorted keys, so two dictations compare equal whatever the clause order. */
 const canon = (fields: ContractFields): string =>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { fillTemplate, templateToTape } from "./fill";
-import { stateFamily } from "./machine";
+import { fillTemplate, templateToTape } from "../../../../src/core/turing/fill";
+import { stateFamily } from "../../../../src/core/turing/machine";
 
 describe("templateToTape", () => {
   it("keeps markers as single cells", () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { guideText, mergeFields, missingFields, questionFor } from "./dialog";
-import { parseContract } from "./parser";
-import { tokens } from "./parser/test-tokens";
+import { guideText, mergeFields, missingFields, questionFor } from "../../../src/core/dialog";
+import { parseContract } from "../../../src/core/parser";
+import { tokens } from "../../helpers/tokens";
 
 const pastoreo = { required: ["animal", "lote", "fecha", "valor", "uso"], optional: ["raza", "cantidad", "duracion"] };
 

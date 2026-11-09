@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client", "@testing-library/jest-dom"]
+    "types": ["vite/client"]
   },
-  "include": ["src", "scripts", "vite.config.ts", "eslint.config.js"]
+  "include": ["src", "scripts", "config/vite.config.ts"]
 }

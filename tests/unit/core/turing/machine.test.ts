@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BLANK, runMachine, stateFamily, type TuringMachine } from "./machine";
+import { BLANK, runMachine, stateFamily, type TuringMachine } from "../../../../src/core/turing/machine";
 
 /** Replaces every "a" with "b" and accepts at the first blank. */
 const aToB: TuringMachine = {

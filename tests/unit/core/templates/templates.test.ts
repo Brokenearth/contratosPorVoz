@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { fillTemplate } from "../turing/fill";
-import { extractedFieldNames, formatMoney, toValueMap, contractValues } from "./format";
-import { getTemplate, parseTemplate, TEMPLATES } from "./index";
-import type { ContractFields } from "../types";
+import { fillTemplate } from "../../../../src/core/turing/fill";
+import { extractedFieldNames, formatMoney, toValueMap, contractValues } from "../../../../src/core/templates/format";
+import { getTemplate, parseTemplate, TEMPLATES } from "../../../../src/core/templates/index";
+import type { ContractFields } from "../../../../src/core/types";
 
 const exampleFields: ContractFields = {
   lote: "La Esperanza",

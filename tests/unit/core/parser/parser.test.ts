@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { ParseTree } from "../types";
-import { formatGrammar, grammar, parseContract, parseFrom } from "./index";
-import { tokens } from "./test-tokens";
+import type { ParseTree } from "../../../../src/core/types";
+import { formatGrammar, grammar, parseContract, parseFrom } from "../../../../src/core/parser/index";
+import { tokens } from "../../../helpers/tokens";
 
 function shape(tree: ParseTree): string {
   if (tree.children.length === 0) return tree.token ? `${tree.symbol}:${tree.token.lexeme}` : tree.symbol;

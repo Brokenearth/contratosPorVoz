@@ -1,13 +1,13 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEMO_PHRASES, runPipeline } from "../../core/pipeline";
-import { contractValues } from "../../core/templates";
-import { fillMachine } from "../../core/turing/fill";
-import { LexerAutomata } from "./LexerAutomata";
-import { StackViewer } from "./StackViewer";
-import { TheoryTabs } from "./TheoryTabs";
-import { TuringViewer } from "./TuringViewer";
+import { DEMO_PHRASES, runPipeline } from "../../../../src/core/pipeline";
+import { contractValues } from "../../../../src/core/templates";
+import { fillMachine } from "../../../../src/core/turing/fill";
+import { LexerAutomata } from "../../../../src/ui/theory/LexerAutomata";
+import { StackViewer } from "../../../../src/ui/theory/StackViewer";
+import { TheoryTabs } from "../../../../src/ui/theory/TheoryTabs";
+import { TuringViewer } from "../../../../src/ui/theory/TuringViewer";
 
 afterEach(() => {
   cleanup();

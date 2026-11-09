@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { runDfa } from "../regex";
-import { TOKEN_DEFINITIONS, getTokenAutomata, normalize, tokenize } from "./index";
+import { runDfa } from "../../../../src/core/regex";
+import { TOKEN_DEFINITIONS, getTokenAutomata, normalize, tokenize } from "../../../../src/core/lexer/index";
 
 const stream = (text: string): string[] => tokenize(text).tokens.map((t) => `${t.type}:${t.value}`);
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getTemplate, TEMPLATES } from "../templates";
-import { selectTemplate } from "./selection";
+import { getTemplate, TEMPLATES } from "../../../../src/core/templates";
+import { selectTemplate } from "../../../../src/core/turing/selection";
 
 describe("selectTemplate", () => {
   it("chooses PASTOREO for the §5.4 example", () => {

@@ -1,8 +1,8 @@
 import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
-import { App } from "./App";
-import type { InputSource, ListenHandlers } from "./voice";
+import { App } from "../../../src/ui/App";
+import type { InputSource, ListenHandlers } from "../../../src/ui/voice";
 
 afterEach(cleanup);
 

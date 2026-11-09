@@ -1,4 +1,4 @@
-import type { Token, TokenType } from "../types";
+import type { Token, TokenType } from "../../src/core/types";
 
 /**
  * Tiny token builder for parser tests. It is NOT the lexer: it splits a

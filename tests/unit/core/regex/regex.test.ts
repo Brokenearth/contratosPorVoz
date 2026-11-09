@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compileRegex, nfaAccepts, parseRegex, runDfa, thompson, toDot } from "./index";
+import { compileRegex, nfaAccepts, parseRegex, runDfa, thompson, toDot } from "../../../../src/core/regex/index";
 
 const DEFS = { DIGITO: "0|1|2|3|4|5|6|7|8|9", NUM: "DIGITO DIGITO*" };
 

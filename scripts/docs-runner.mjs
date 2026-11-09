@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { runnerImport } from "vite";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const { module } = await runnerImport(join(root, "scripts/generate-docs.ts"));
+const { module } = await runnerImport(join(root, "scripts/generate-docs.ts"), { configFile: join(root, "config/vite.config.ts") });
 const { files, fragments } = module.generateDocs();
 
 for (const [path, content] of Object.entries(files)) {

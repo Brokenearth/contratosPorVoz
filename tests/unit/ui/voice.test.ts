@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isSpeechSupported, SILENCE_TIMEOUT_MS, SPEECH_LANG, startListening } from "./voice";
+import { isSpeechSupported, SILENCE_TIMEOUT_MS, SPEECH_LANG, startListening } from "../../../src/ui/voice";
 
 class FakeRecognition {
   static last: FakeRecognition;

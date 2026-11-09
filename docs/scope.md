@@ -24,7 +24,7 @@ src/core/templates/  plantillas .md con declaración de campos (pastoreo, cultiv
 src/core/pipeline.ts runPipeline(texto) → resultado con todas las trazas
 src/core/dialog.ts   guía inicial y preguntas por campos faltantes (§5.6)
 src/ui/              React: entrada voz/texto, tokens, árbol + pila, cinta de la MT, contrato, descarga .md
-e2e/                 Playwright
+tests/               pruebas unitarias, de componentes y Playwright
 docs/                informe con ER, AFN/AFD, gramática, AP y MT (entregable 2) + 3 contratos de demo (entregable 3)
 ```
 

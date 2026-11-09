@@ -73,3 +73,17 @@ La explicación detallada de la gramática, los autómatas y las máquinas de Tu
 [informe técnico](docs/informe.md). También se pueden consultar los
 [diagramas de los autómatas](docs/automatas.md), la [propuesta del proyecto](docs/propuesta.pdf)
 y los [contratos de ejemplo](docs/contratos-demo/).
+
+## Organización del repositorio
+
+```text
+src/        Código de la aplicación y modelos de la materia
+config/     Configuración de Vite y herramientas de desarrollo
+tests/      Pruebas unitarias y pruebas en navegador
+scripts/    Generación de documentación y ejemplos
+docs/       Propuesta, informe, diagramas y material de apoyo
+```
+
+Los archivos necesarios para instalar y desplegar el proyecto permanecen en la raíz.
+La función de cada archivo, los comandos de desarrollo y el despliegue en Netlify
+se explican en la [guía de desarrollo](docs/desarrollo.md).
