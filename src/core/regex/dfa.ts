@@ -6,6 +6,9 @@ export interface Dfa extends Automaton {
 }
 
 /** Subset construction: NFA-λ → DFA (only reachable states; missing transitions mean rejection). */
+// Materia §5.1: un estado Di del AFD representa un conjunto de estados del AFN.
+// Para cada símbolo se calcula move y después su clausura λ; se aceptan los
+// conjuntos que contienen al menos un estado final del AFN.
 export function subsetConstruction(nfa: Automaton): Dfa {
   const sortStates = (states: Set<string>): string[] => [...states].sort((a, b) => stateIndex(a) - stateIndex(b));
   const nameByKey = new Map<string, string>();

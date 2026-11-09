@@ -99,6 +99,8 @@ function capitalize(text: string): string {
 }
 
 /** Required keys that are not present in `fields`, in declaration order. */
+// Propuesta §5.6: diálogo por datos faltantes. Es lógica de aplicación;
+// no constituye por sí misma otro autómata ni una prueba de corrección gramatical.
 export function missingFields(fields: ContractFields, required: string[]): string[] {
   return required.filter((key) => !(infoOf(key)?.isPresent(fields) ?? false));
 }

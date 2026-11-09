@@ -42,6 +42,11 @@ export function templateToTape(template: string): string[] {
  *   q_seccion[n] erases and reads "[[?n]]"; if n has a value the section text is kept,
  *   otherwise q_saltar[n] erases everything up to "[[/"; q_cerrar erases the closing "n]]".
  */
+// Materia §5.3: seguir q_buscar → q_leer → q_borrar → q_escribir.
+// Simplificación del prototipo: el parámetro [nombre] se acumula en el estado
+// y el valor completo se escribe como un símbolo compuesto en una celda.
+// Una MT clásica uniforme exigiría control finito y una codificación fija
+// de nombres y valores en la cinta, en lugar de estas cadenas arbitrarias.
 export function fillMachine(values: Record<string, string>): TuringMachine {
   const has = (name: string) => Object.hasOwn(values, name);
   const isNameChar = (symbol: string) => symbol.length === 1 && symbol !== END && symbol !== BLANK;

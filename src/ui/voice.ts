@@ -58,6 +58,8 @@ export function isSpeechSupported(): boolean {
 }
 
 /** Keeps one dictation session alive across browser restarts, until seven seconds of silence. */
+// Propuesta §4.1: adaptador de entrada. La Web Speech API transcribe la voz;
+// las expresiones regulares y los autómatas se ejecutan después, en src/core/.
 export function startListening(handlers: ListenHandlers): () => void {
   const Ctor = recognitionConstructor();
   if (!Ctor) {

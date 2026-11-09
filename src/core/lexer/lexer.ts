@@ -39,6 +39,9 @@ interface Candidate {
 }
 
 /** Runs every DFA from `position`; the longest match wins and ties go to the earlier definition. */
+// Materia §5.1: reconocimiento efectivo mediante los AFD construidos arriba.
+// Se elige la coincidencia más larga; el orden de las definiciones desempata.
+// Después se produce el token con tipo, lexema, valor y posición.
 function bestMatch(text: string, position: number): Candidate | null {
   let best: Candidate | null = null;
   for (const automata of tokenAutomata()) {

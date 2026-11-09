@@ -31,6 +31,9 @@ const NO_TEMPLATE_QUESTION =
   "No se reconoció el tipo de contrato. Mencione los animales o el cultivo, el lote, la fecha, el valor y el uso.";
 
 /** Text → tokens → derivation (PDA) → fields → template (selection TM) → contract (fill TM). */
+// Materia: punto de entrada de la exposición. Siga las llamadas en este orden:
+// tokenize → parseContract → selectTemplate → fillTemplate.
+// La voz ya se convirtió a texto antes de llegar aquí; no es parte del léxico.
 export function runPipeline(
   text: string,
   previousFields: ContractFields = {},

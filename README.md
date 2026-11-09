@@ -87,3 +87,6 @@ docs/       Propuesta, informe, diagramas y material de apoyo
 Los archivos necesarios para instalar y desplegar el proyecto permanecen en la raíz.
 La función de cada archivo, los comandos de desarrollo y el despliegue en Netlify
 se explican en la [guía de desarrollo](docs/desarrollo.md).
+
+Para preparar la explicación del código y su relación con la materia, consulta la
+[guía del adelanto](docs/guia-exposicion.md).

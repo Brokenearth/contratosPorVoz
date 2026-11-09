@@ -62,6 +62,8 @@ function scan(source: string): RegexToken[] {
   return tokens;
 }
 
+// Materia §5.1: convierte la notación de la ER en un árbol de operadores.
+// Ejemplo: vaca(s|λ) contiene concatenación, unión y cadena vacía.
 export function parseRegex(source: string, definitions: Definitions = {}): RegexNode {
   return parseWithStack(source, definitions, []);
 }

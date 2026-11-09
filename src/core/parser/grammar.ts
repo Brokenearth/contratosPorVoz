@@ -24,6 +24,9 @@ export interface Grammar {
   productions: Production[];
 }
 
+// Materia §5.2/5.5: cada fila representa producciones A → α de una GLC.
+// CONTRATO → CLAUSULA CONTRATO | λ admite cláusulas en distinto orden.
+// ITEM → ... SUBOPT y SUBOPT → ... LISTA fin permiten anidamiento recursivo.
 const RULES: [string, string[][]][] = [
   ["CONTRATO", [["CLAUSULA", "CONTRATO"], []]],
   ["CLAUSULA", [["ANIMALES"], ["LOTE"], ["VALOR"], ["FECHA"], ["DURACION"], ["USO"], ["CULTIVO"],

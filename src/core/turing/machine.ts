@@ -3,13 +3,13 @@ import type { TapeSnapshot, TuringRun } from "../types";
 /**
  * Generic single-tape Turing machine.
  *
- * Tape alphabet: every cell holds a string. Cells are usually one character, but a symbol may be
- * longer ("{{", "[[?", a field name, a field value): the alphabet is still finite because it is
- * built from the given template and field map. The tape is infinite in both directions (blank cells
- * are added on demand).
- *
- * States are strings. A state like `q_leer[raza]` belongs to the family `q_leer`: the bracketed part
- * is information remembered in the finite control (e.g. the field name read so far).
+ * Abstracción del prototipo: una celda puede contener una cadena completa y
+ * los estados pueden incluir parámetros como q_leer[raza]. Se muestran las
+ * operaciones de lectura, escritura y movimiento, pero eso no establece por
+ * sí solo conjuntos Q y Γ finitos y fijos para todas las entradas posibles.
+ * fill.ts y selection.ts explican los límites de las máquinas de dominio.
+ * La cinta se amplía bajo demanda en ambos sentidos, dentro de los límites
+ * de memoria del equipo; maxSteps limita las transiciones de una ejecución.
  */
 export const BLANK = "□";
 
@@ -43,6 +43,9 @@ export function stateFamily(state: string): string {
   return bracket === -1 ? state : state.slice(0, bracket);
 }
 
+// Materia §5.3: este es el ciclo de simulación, no una animación de la interfaz.
+// δ(estado, símbolo leído) devuelve escritura, estado siguiente y movimiento.
+// Más abajo se ejecutan esas tres operaciones sobre tape, state y head.
 export function runMachine(machine: TuringMachine, input: string[], options: RunOptions = {}): TuringRun {
   const maxSteps = options.maxSteps ?? 200_000;
   const sampleEvery = options.sampleEvery ?? 0;

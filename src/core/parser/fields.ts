@@ -136,6 +136,9 @@ function visit(node: ParseTree, fields: ContractFields): void {
 }
 
 /** Walks the derivation tree and collects the contract fields (proposal §5.5: lote ID vs animal count). */
+// Materia: extracción semántica después del análisis sintáctico.
+// Se recorre el árbol de derivación para dar significado a los tokens:
+// el NUM dentro de LOTE identifica el predio; el NUM de ITEM cuenta animales.
 export function extractFields(tree: ParseTree | null): ContractFields {
   const fields: ContractFields = {};
   if (tree) visit(tree, fields);

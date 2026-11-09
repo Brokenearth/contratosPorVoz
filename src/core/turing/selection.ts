@@ -80,6 +80,9 @@ export function selectionMachine(): TuringMachine {
 }
 
 /** Runs the selection machine and reads the tallies from the final tape. */
+// Materia §5.4: la simulación compara campos y escribe conteos unarios en la cinta.
+// ATENCIÓN: readTallies interpreta esa salida y el bucle con isBetter elige
+// la plantilla en TypeScript. El argmáximo NO se calcula dentro de la MT actual.
 export function selectTemplate(
   fieldNames: string[],
   templates: TemplateDef[],

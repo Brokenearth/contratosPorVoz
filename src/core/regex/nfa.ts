@@ -30,6 +30,8 @@ interface Edge {
 }
 
 /** Thompson construction: regex AST → NFA-λ with states q0..qn (q0 is the initial state). */
+// Materia §5.1: Thompson une fragmentos con transiciones λ para construir el AFN.
+// Mostrar los casos concat, union y star: cada uno corresponde a un operador de ER.
 export function thompson(node: RegexNode): Automaton {
   let stateCount = 0;
   const edges: Edge[] = [];

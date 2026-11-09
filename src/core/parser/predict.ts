@@ -33,6 +33,9 @@ const row = (use: number, ...when: [string] | [string, string]): Row => ({ when,
  * none matches, the λ alternative is used when the nonterminal has one.
  * Alternative numbers follow the declaration order in grammar.ts.
  */
+// Materia §5.5: decisión predictiva escrita a mano, con hasta dos tokens de
+// anticipación. Compare «por» + num (duración) con «por» + «un» (valor).
+// Esta tabla no se obtiene automáticamente de FIRST/FOLLOW.
 export const PREDICT: Record<string, Row[]> = {
   CONTRATO: [row(0, "*")],
   CLAUSULA: [

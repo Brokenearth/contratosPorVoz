@@ -15,6 +15,8 @@ export interface TokenDefinition {
 }
 
 /** Named sub-expressions that token regexes may reference. */
+// Materia §5.1: estas cadenas describen lenguajes regulares, no patrones que
+// el lexer entregue al RegExp nativo. NUM = DIGITO DIGITO* exige al menos un dígito.
 export const NAMED_DEFINITIONS: Readonly<Record<string, string>> = {
   DIGITO: "0|1|2|3|4|5|6|7|8|9",
   LETRA: "a|b|c|d|e|f|g|h|i|j|k|l|m|n|ñ|o|p|q|r|s|t|u|v|w|x|y|z",

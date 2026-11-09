@@ -39,6 +39,10 @@ function describe(symbol: string): string {
  * Error recovery (panic mode): when no clause can start with the next token, that token is discarded with a
  * warning instead of rejecting the whole dictation; errors inside a clause still reject.
  */
+// Materia §5.2: stack es la pila de símbolos pendientes de reconocer.
+// Al expandir A → X Y se apila en orden inverso para procesar X primero.
+// markers (Z0/SUB) es un registro auxiliar de anidamiento para la traza;
+// no debe presentarse como una segunda pila independiente de un AP general.
 export function runPda(start: string, tokens: Token[]): PdaRun {
   const root: ParseTree = { symbol: start, children: [] };
   const stack: Entry[] = [{ symbol: start, node: root }];
