@@ -7,6 +7,10 @@
 - Si el usuario dice «GitHub Brokenearth», «mi GitHub Brokenearth» o indica
   explícitamente **Brokenearth**, el destino es **Brokenearth**. Para este
   proyecto, el repositorio es `Brokenearth/contratosPorVoz`.
+- Cuando se especifique la cuenta que debe publicar, la identidad autenticada
+  debe coincidir con ella; elegir un repositorio de ese propietario desde otra
+  cuenta no satisface la instrucción. Respetar las restricciones de cuenta
+  indicadas en el chat y no usar otra identidad para crear forks o pull requests.
 - Una cuenta o un repositorio indicados explícitamente tienen prioridad sobre
   la cuenta predeterminada y sobre el remoto `origin`.
 - Comprobar la identidad conectada y los permisos del destino antes de subir
