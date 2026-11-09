@@ -1,142 +1,75 @@
 # Contratos rurales por voz
 
-Aplicación web que redacta **contratos de arrendamiento rural** a partir de lo que una
-persona dicta por voz (o escribe). Proyecto académico de Lenguajes de Programación: el texto pasa por
-un analizador léxico hecho con **expresiones regulares → AFN (Thompson) → AFD (subconjuntos)**, un
-analizador sintáctico con **gramática libre de contexto y autómata a pila**, y dos **máquinas de
-Turing**: una elige la plantilla (pastoreo, cultivo o mixta) y otra la rellena. La interfaz muestra
-los tokens, el AFD de un token, el árbol de derivación, la pila y la cinta de la MT paso a paso.
+Proyecto de la materia Lenguajes de Programación que permite redactar contratos de
+arrendamiento rural a partir de una descripción hablada o escrita.
 
-## Requisitos
+La idea parte de una situación cotidiana en el campo: las condiciones de un arriendo se
+conversan, pero llevar ese acuerdo a un documento puede resultar más complicado. Hay que
+organizar los datos del lote, el uso que se le dará, el tiempo del arriendo y el valor
+acordado. El proyecto busca facilitar ese paso, especialmente para personas que se sienten
+más cómodas hablando que escribiendo o que tienen poca experiencia con herramientas digitales.
 
-- **Node.js 24** o superior.
-- **pnpm 9** (`corepack enable` lo instala con la versión fijada en `package.json`).
-- Para dictar por voz: **Google Chrome o Microsoft Edge** (Web Speech API, requiere internet y permiso
-  de micrófono). En otros navegadores se usa el cuadro de texto.
+Una persona puede describir su acuerdo así:
 
-## Instalación y ejecución
+> Arriendo el lote La Esperanza de 5 hectáreas para 20 vacas de raza Holstein,
+> para producción de leche, por 12 meses desde el 15 de noviembre de 2026,
+> por un valor de 6 millones de pesos.
+
+A partir de esa descripción, el sistema identifica los datos y los organiza en una plantilla
+de contrato. Si falta información, la solicita antes de completar el documento. Se trabajan
+tres tipos de arrendamiento: para pastoreo, para cultivo y mixto.
+
+## Relación con la materia
+
+El proyecto permite seguir un mismo texto por varias etapas y observar qué aporta cada uno
+de los modelos estudiados en clase.
+
+Primero se realiza el análisis léxico. Las expresiones regulares definen las palabras y los
+datos que interesa reconocer, como números, animales, razas o meses. A partir de ellas se
+construyen autómatas finitos que recorren el texto y producen los tokens que recibirá el
+analizador sintáctico.
+
+Después, una gramática libre de contexto y un autómata a pila permiten analizar cómo se
+relacionan esos tokens y extraer los campos del contrato. La pila también sirve para manejar
+grupos anidados, como al mencionar un conjunto de animales y luego precisar cuántos pertenecen
+a un subgrupo. Esto permite mostrar en un caso concreto para qué se necesita recordar
+información durante el análisis.
+
+Finalmente, las máquinas de Turing intervienen en la selección y el llenado de la plantilla.
+Una compara los campos encontrados con los que requiere cada tipo de contrato. La otra
+recorre la plantilla y reemplaza sus marcadores por los datos del acuerdo.
+
+La aplicación muestra estos procesos mediante los tokens, el árbol de derivación, los
+recorridos del AFD, las pilas y la cinta de las máquinas de Turing. Estas vistas permiten
+seguir la ejecución paso a paso durante la explicación del proyecto.
+
+## Uso de la aplicación
+
+La entrada puede hacerse con el micrófono o escribiendo en el cuadro de texto. La transcripción
+utiliza el reconocimiento de voz del navegador; el análisis del texto y los modelos formales
+están implementados en el proyecto.
+
+Los datos se pueden mencionar en distinto orden. Si hace falta alguno, se responde a la
+pregunta del sistema y se conserva la información que ya se había reconocido. Al terminar,
+el contrato se puede revisar, copiar o descargar en Markdown. También hay ejemplos de
+pastoreo, cultivo y arrendamiento mixto para probar el proceso.
+
+## Ejecutar el proyecto
+
+La aplicación está desarrollada con TypeScript, React y Vite. Para ejecutarla se necesita
+Node.js 24 o superior y pnpm 9.
 
 ```bash
-pnpm install
-pnpm dev          # abre http://localhost:5173
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-Para una versión de producción: `pnpm build` y `pnpm preview`.
-
-## Cómo usarla
-
-1. **Voz:** pulse el botón del micrófono (_Dictar por voz_), dicte las condiciones y deténgalo al terminar. El
-   texto reconocido aparece en el cuadro y **se puede corregir** antes de generar.
-2. **Texto:** escriba la frase en el mismo cuadro, o elija una de las frases de ejemplo.
-3. Genere el contrato. Si faltan datos obligatorios, el sistema pregunta solo por ellos
-   (p. ej. "Falta la fecha y para qué se usará el lote."); responda por voz o texto y se fusionan con
-   lo ya dicho.
-4. Revise el documento y use **Orden del documento** para navegar por sus cláusulas. Descárguelo en `.md` o copie su contenido.
-5. Explore **Cómo funciona por dentro**: tokens, recorrido del AFD, árbol, pila, selección y máquina de Turing. Todos los simuladores incluyen pasos, reproducción, pausa y reinicio.
-
-Las instrucciones sugieren este orden: **lote y uso → condiciones (fecha, duración y valor) → partes**.
-También puede mencionar los datos **en cualquier orden**: animales (cantidad, tipo y raza), lote (número o
-nombre) y hectáreas, fecha de inicio, duración, valor, uso, cultivo, quién aporta los insumos y los
-nombres del arrendador y del arrendatario.
-
-También entiende **sinónimos** gracias a un diccionario (`src/core/lexer/synonyms.ts`). Por ejemplo:
-
-- "a partir del" equivale a "desde el".
-- "por un plazo de" equivale a "por".
-- "finca" o "predio" equivalen a "lote".
-- "por la suma de" equivale a "por un valor de".
-
-Los montos se pueden dar en cifras ("$6.000.000 de pesos"). Si una palabra no encaja, se ignora con un
-aviso y el resto se procesa igual. Ejemplo:
-
-> Se arrienda por un período de 12 meses, a partir del 15 de noviembre de 2026, el lote denominado La
-> Esperanza, con una extensión de 5 hectáreas, destinado al mantenimiento de 20 vacas de raza Holstein
-> para producción de leche, por un valor de $6.000.000 de pesos.
-
-## Guion de demostración (3 contratos)
-
-1. **Pastoreo:**
-   _"arriendo lote La Esperanza de 5 hectáreas para 20 vacas de raza holstein para producción de leche
-   por 12 meses desde el 15 de noviembre de 2026 por un valor de 6 millones de pesos"_
-   → muestre los tokens, el AFD de `ANIMAL` y la selección PASTOREO.
-2. **Cultivo con diálogo de faltantes:** dicte primero
-   _"arriendo el lote El Porvenir de 3 hectáreas para cultivo de maíz por 6 meses"_; el sistema pide quién
-   aporta los insumos, la fecha y el valor. Responda
-   _"desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos, los insumos los aporta el
-   arrendatario"_ → contrato CULTIVO.
-3. **Mixta con anidación:**
-   _"arriendo el lote 4 de 10 hectáreas para 15 vacas de raza gir para ganadería de leche y para
-   cultivo de maíz por 1 año desde el 1 de marzo de 2027 por un valor de 8 millones de pesos, los
-   insumos los aporta el arrendador"_ → contrato MIXTA.
-4. **Pila (opcional):** elija la frase de ejemplo con _"20 vacas de raza holstein de los cuales 5
-   terneras fin y 3 caballos …"_ y muestre en la traza del AP cómo la pila pasa de `Z0` a `Z0 SUB` y
-   vuelve a `Z0`.
-
-Los contratos resultantes de estas frases están en [`docs/contratos-demo/`](docs/contratos-demo/).
-
-## Comandos
-
-| Comando              | Qué hace                                                                                                               |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`           | servidor de desarrollo                                                                                                 |
-| `pnpm lint`          | ESLint                                                                                                                 |
-| `pnpm typecheck`     | TypeScript estricto (`tsc --noEmit`)                                                                                   |
-| `pnpm test`          | pruebas unitarias y de componentes (Vitest)                                                                            |
-| `pnpm build`         | typecheck + compilación de producción                                                                                  |
-| `pnpm test:e2e`      | pruebas extremo a extremo (Playwright; la primera vez: `pnpm exec playwright install chromium`)                        |
-| `pnpm docs:generate` | regenera las tablas, diagramas y trazas del informe, `docs/automatas.md` y los contratos de demo usando el código real |
-
-## Estructura
-
-```text
-src/core/regex/      parser de ER, Thompson (AFN-λ), subconjuntos (AFD)
-src/core/lexer/      definiciones de tokens y tokenizador de coincidencia más larga
-src/core/parser/     gramática, tabla de predicción, autómata a pila, extracción de campos
-src/core/turing/     máquina de Turing genérica, MT de selección y MT de relleno
-src/core/templates/  plantillas PASTOREO, CULTIVO y MIXTA (.md con campos declarados)
-src/core/pipeline.ts texto → tokens → AP → campos → selección → contrato
-src/core/dialog.ts   guía inicial y preguntas por campos faltantes
-src/ui/              interfaz React (voz/texto, visualizaciones, descarga)
-e2e/                 pruebas Playwright
-scripts/             generador de la documentación (pnpm docs:generate)
-docs/                propuesta, alcance, informe, autómatas y contratos de demo
-```
+La aplicación estará disponible en `http://localhost:5173`. Para el dictado por voz se recomienda
+Chrome o Edge, con conexión a internet y permiso para usar el micrófono.
 
 ## Documentación
 
-- [Informe técnico](docs/informe.md) (entregable 2): ER, AFN/AFD, gramática, tabla de predicción,
-  trazas del AP y de las MT, pruebas y limitaciones.
-- [Autómatas completos](docs/automatas.md) de NUM, ANIMAL y MES, generados por el código.
-- Contratos de demostración (entregable 3): [pastoreo](docs/contratos-demo/01-pastoreo.md),
-  [cultivo](docs/contratos-demo/02-cultivo.md), [mixta](docs/contratos-demo/03-mixta.md).
-- [Propuesta](docs/propuesta.pdf) y [alcance](docs/scope.md).
-
-## Interfaz y simuladores
-
-- Instrucciones escritas, sin lectura de guía en voz alta.
-- Interfaz adaptable a móvil y escritorio, iconos vectoriales y documento con tipografía de lectura.
-- **AFD:** use un token del texto o escriba una cadena. Recorra sus caracteres y vea dónde se acepta o rechaza. Puede alternar entre el recorrido y el grafo completo; las tablas AFN/AFD están en el detalle técnico.
-- **Pila:** avance por la traza real. El tope aparece arriba; se muestran la pila de símbolos y los marcadores Z0/SUB por separado. El ejemplo «Pastoreo anidado» permite observar cómo se apila SUB y cómo «fin» lo retira.
-- **MT:** observe la cinta, el cabezal y la próxima transición (lectura, escritura, movimiento y estado). El grafo agrupa familias de estados visitadas; no pretende representar todas las transiciones posibles. Las instantáneas se registran al cambiar de familia y muestran el número de transición real, de modo que avanzar una instantánea puede avanzar varias transiciones.
-- Los tokens, el árbol y la pila analizan la última entrada; las máquinas de selección y llenado usan los datos acumulados cuando se responde por un campo faltante.
-
-## Copia local e historial
-
-Esta copia se importó desde el ZIP original. El primer commit conserva esa versión y los siguientes
-registran los cambios; el historial anterior de GitHub no está incluido en el ZIP de origen.
-La rama de trabajo es `mejoras-interfaz-y-visualizaciones`. El remoto `origin` conserva la URL original.
-
-```bash
-git log --oneline
-pnpm install --frozen-lockfile
-pnpm test
-pnpm build
-pnpm test:e2e
-```
-
-Las pruebas de voz simulan la Web Speech API y el reloj. La transcripción real depende del servicio
-del navegador y del permiso de micrófono. Para usar un Chromium ya instalado en las pruebas E2E:
-
-```bash
-PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm test:e2e
-```
+La explicación detallada de la gramática, los autómatas y las máquinas de Turing está en el
+[informe técnico](docs/informe.md). También se pueden consultar los
+[diagramas de los autómatas](docs/automatas.md), la [propuesta del proyecto](docs/propuesta.pdf)
+y los [contratos de ejemplo](docs/contratos-demo/).
