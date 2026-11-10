@@ -77,7 +77,7 @@ export function runPipeline(
   const blocked = failures.length > 0;
   const contract = fill?.accepted ? fill : null;
   const question = failures[0] ?? (template ? missingQuestion : NO_TEMPLATE_QUESTION);
-  const errors = [...failures, ...parse.warnings, ...partyWarnings];
+  const errors = [...failures, ...(lex.warnings ?? []), ...parse.warnings, ...partyWarnings];
   const suggestions = parse.ok ? [] : suggestBreedCorrections(lex.tokens);
   return { lex, parse, fields, confirmedNames, selection, template, missing, question, contract, fill, blocked, errors, suggestions };
 }
