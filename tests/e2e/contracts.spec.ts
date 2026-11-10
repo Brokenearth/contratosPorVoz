@@ -121,17 +121,22 @@ for (const [kind, use] of [
   });
 }
 
-test("a suggested breed changes the draft only after confirmation", async ({ page }) => {
-  await analyze(page, "lote 20 para 4 vacas de raza norolando para ceba desde el 2 de marzo valor 900 mil pesos");
+test("repairs clear words and asks about ambiguous alternatives before generating", async ({ page }) => {
+  await analyze(page, "lote 20 para 4 bombino de raza norolando para ceba desde el 2 de marzo valor 2 milones de pesos");
+  await expect(page.getByText("«bombino» → «bovino»")).toBeVisible();
+  await expect(page.getByText("«milones» → «millones»")).toBeVisible();
   await expect(page.getByRole("button", { name: "Confirmar Normando" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Confirmar Girolando" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Descargar .md" })).toHaveCount(0);
-  await analyze(page, "lote 20 para 4 vacas de raza holsten para ceba desde el 2 de marzo valor 900 mil pesos");
-  await expect(page.getByRole("button", { name: "Descargar .md" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Confirmar Holstein" }).click();
+  await page.getByRole("button", { name: "Confirmar Normando" }).click();
+  const confirmed = await downloadContract(page);
+  expect(confirmed.content).toContain("4 bovinos de raza Normando");
+  expect(confirmed.content).toContain("$ 2.000.000 pesos");
+
+  await analyze(page, "lote 20 para 4 baca de raza holste para ceba desde el 2 de marzo valor 900 mil pesos");
   await page.getByText("Transcripción original", { exact: true }).click();
   const review = page.getByRole("region", { name: "Revise los datos" });
-  await expect(review.getByText(/raza holsten para ceba/)).toBeVisible();
+  await expect(review.getByText(/4 baca de raza holste para ceba/)).toBeVisible();
   expect((await downloadContract(page)).content).toContain("4 vacas de raza Holstein");
 });
 

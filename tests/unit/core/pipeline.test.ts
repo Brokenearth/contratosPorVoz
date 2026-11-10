@@ -35,17 +35,21 @@ describe("runPipeline with the real lexer", () => {
     });
   });
 
-  it("suggests a breed with the original span only in an explicit breed context", () => {
+  it("applies a clear breed correction while protecting unrelated fields", () => {
     const input = "20 vacas de raza holsten";
     const result = runPipeline(input);
     expect(result.contract).toBeNull();
-    expect(result.suggestions).toEqual([
-      { original: "holsten", start: input.indexOf("holsten"), end: input.length, candidates: [{ value: "holstein", distance: 1 }] },
-    ]);
+    expect(result.analyzedText).toBe("20 vacas de raza holstein");
+    expect(result.corrections).toEqual([{ original: "holsten", value: "holstein" }]);
+    expect(result.suggestions).toEqual([]);
     for (const protectedInput of [
       "arrendador nombre Ana Holsten", "lote El Holsten", "arrendatario Ana Gómez",
-      "20 vacas de raza gr", "lote 20 de 8 fanegdas", "valor 6 milloness",
-    ]) expect(runPipeline(protectedInput).suggestions).toEqual([]);
+      "20 vacas de raza gr", "lote 20 de 8 fanegdas", "valor 6 pesoss",
+    ]) {
+      const protectedResult = runPipeline(protectedInput);
+      expect(protectedResult.analyzedText).toBe(protectedInput);
+      expect(protectedResult.suggestions).toEqual([]);
+    }
   });
 
   it("retains the rejected filling trace without offering its partial output as a contract", () => {

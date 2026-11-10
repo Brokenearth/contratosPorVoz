@@ -34,7 +34,11 @@ export function App({ source }: { source?: InputSource }) {
       const draft = result.contract && result.template
         ? { markdown: result.contract.output, template: result.template }
         : keepDraft ? (current?.draft ?? null) : null;
-      return { input, originalInput, previous, options, result, draft, id: (current?.id ?? 0) + 1 };
+      return {
+        input: result.analyzedText,
+        originalInput: originalInput ?? (result.analyzedText !== input ? input : undefined),
+        previous, options, result, draft, id: (current?.id ?? 0) + 1,
+      };
     });
   }
 
