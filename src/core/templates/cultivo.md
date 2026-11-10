@@ -1,27 +1,29 @@
 ---
 id: CULTIVO
 titulo: Contrato de arrendamiento de lote para cultivo
-requeridos: lote, hectareas, cultivo, insumos, fecha, duracion, valor
-opcionales: arrendador, arrendatario
+requeridos: lote, cultivo, fecha, valor
+opcionales: hectareas, insumos, duracion, arrendador, arrendatario
 ---
 
 # CONTRATO DE ARRENDAMIENTO DE LOTE PARA CULTIVO
 
-## Partes
+[[?estado_borrador]]> Borrador incompleto. Pendientes: {{estado_borrador}}
+
+[[/estado_borrador]]## Partes
 
 Entre los suscritos, {{arrendador}}, mayor de edad, quien en adelante se denominará el ARRENDADOR, y {{arrendatario}}, mayor de edad, quien en adelante se denominará el ARRENDATARIO, se celebra el presente contrato de arrendamiento de lote rural para cultivo, que se regirá por las siguientes cláusulas.
 
 ## Objeto
 
-CLÁUSULA PRIMERA. El ARRENDADOR entrega a título de arrendamiento al ARRENDATARIO el lote {{lote}}, con una extensión de {{hectareas}}, para que sea utilizado exclusivamente en actividades agrícolas, en las condiciones de este contrato.
+CLÁUSULA PRIMERA. El ARRENDADOR entrega a título de arrendamiento al ARRENDATARIO el lote {{lote}}[[?hectareas]], con una extensión de {{hectareas}}[[/hectareas]], para que sea utilizado exclusivamente en actividades agrícolas, en las condiciones de este contrato.
 
 ## Destinación
 
-CLÁUSULA SEGUNDA. El ARRENDATARIO podrá destinar el lote {{lote}} ({{hectareas}}) exclusivamente al cultivo de {{cultivo}}, durante {{duracion}}. Los insumos necesarios para el cultivo (semillas, abonos, fertilizantes y demás) serán aportados por {{insumos}}. No podrá sembrar cultivos distintos ni darle al lote otro uso sin autorización escrita del ARRENDADOR.
+CLÁUSULA SEGUNDA. El ARRENDATARIO podrá destinar el lote {{lote}}[[?hectareas]] ({{hectareas}})[[/hectareas]] exclusivamente al cultivo de {{cultivo}}[[?duracion]], durante {{duracion}}[[/duracion]].[[?insumos]] Los insumos necesarios para el cultivo (semillas, abonos, fertilizantes y demás) serán aportados por {{insumos}}.[[/insumos]] No podrá sembrar cultivos distintos ni darle al lote otro uso sin autorización escrita del ARRENDADOR.
 
 ## Duración
 
-CLÁUSULA TERCERA. El término de duración del presente contrato es de {{duracion}}[[?fecha]], contados a partir del {{fecha}}[[/fecha]]. Si al vencimiento hay una cosecha pendiente, el ARRENDATARIO podrá recogerla dentro de los treinta (30) días siguientes, o el contrato podrá prorrogarse por acuerdo escrito entre las partes.
+CLÁUSULA TERCERA. El arrendamiento comienza el {{fecha}}.[[?duracion]] Tiene una duración de {{duracion}}. Si al vencimiento hay una cosecha pendiente, el ARRENDATARIO podrá recogerla dentro de los treinta (30) días siguientes, o el contrato podrá prorrogarse por acuerdo escrito entre las partes.[[/duracion]]
 
 ## Precio y forma de pago
 

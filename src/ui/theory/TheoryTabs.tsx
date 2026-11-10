@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
+import { questionFor } from "../../core/dialog";
 import type { PipelineResult } from "../../core/pipeline";
 import type { ParseTree } from "../../core/types";
 import { contractValues } from "../../core/templates";
@@ -159,8 +160,8 @@ function SelectionTab({ result }: { result: PipelineResult }) {
         ))}
       </div>
       <p className="theory-description">
-        Se elige la plantilla con mayor proporción de campos presentes; a igual proporción, la que cubre más campos. El
-        orden de las plantillas resuelve los empates restantes.
+        La máquina compara los campos, cuenta coincidencias y escribe el resultado en cinta. Los animales y el cultivo
+        permiten distinguir el uso del lote. Sin esa evidencia, el resultado queda sin plantilla.
       </p>
       {(tie || low) && (
         <p className="pending-note">
@@ -169,12 +170,12 @@ function SelectionTab({ result }: { result: PipelineResult }) {
             : "Coincidencia baja: aún faltan datos para identificar el contrato."}
         </p>
       )}
-      <TuringViewer run={run} label="Máquina de Turing de selección" machine={selectionMachine()} />
+      <TuringViewer run={run} label="Máquina de Turing de selección" machine={selectionMachine(true)} />
     </div>
   );
 }
 function TuringTab({ result }: { result: PipelineResult }) {
-  if (!result.contract)
+  if (!result.fill)
     return (
       <div className="theory-empty">
         <h3>La plantilla está lista para completar</h3>
@@ -186,9 +187,9 @@ function TuringTab({ result }: { result: PipelineResult }) {
     );
   return (
     <TuringViewer
-      run={result.contract}
+      run={result.fill}
       label="Máquina de Turing de llenado"
-      machine={fillMachine(contractValues(result.fields))}
+      machine={fillMachine(contractValues(result.fields, questionFor(result.missing).replace(/^Falta /, "")))}
     />
   );
 }

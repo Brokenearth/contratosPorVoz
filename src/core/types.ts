@@ -2,13 +2,14 @@ export type TokenType =
   | "NUM" | "ANIMAL" | "RAZA" | "UNIDAD_TIEMPO" | "UNIDAD_AREA" | "MES" | "MONEDA"
   | "VERBO" | "USO" | "CULTIVO" | "INSUMOS" | "PALABRA_CLAVE" | "CONECTOR" | "COMA" | "NOMBRE" | "DESCONOCIDO";
 /** `synonymOf`: original words when the token comes from the synonym dictionary ("a partir del" → "desde"). */
-export interface Token { type: TokenType; lexeme: string; value: string | number; start: number; end: number; synonymOf?: string }
+export interface Token { type: TokenType; lexeme: string; value: string | number; start: number; end: number; synonymOf?: string; partyName?: true }
 export interface LexStep { position: number; tokenType: TokenType | null; dfaStates: string[]; accepted: boolean }
 export interface LexResult { tokens: Token[]; trace: LexStep[]; errors: { position: number; lexeme: string; message: string }[] }
 
 export interface AnimalItem { cantidad?: number; animal: string; raza?: string; sub?: AnimalItem[] }
+export type PartyNames = Pick<ContractFields, "arrendador" | "arrendatario">;
 export interface ContractFields {
-  animales?: AnimalItem[]; lote?: string; hectareas?: number;
+  animales?: AnimalItem[]; lote?: string; hectareas?: number; areaLocal?: { cantidad: number; unidad: "fanegada" | "cuadra" };
   fecha?: { dia: number; mes: number; anio?: number };
   valor?: { monto: number; moneda: string }; duracion?: { cantidad: number; unidad: string };
   uso?: string; cultivo?: string; insumos?: string; arrendador?: string; arrendatario?: string;

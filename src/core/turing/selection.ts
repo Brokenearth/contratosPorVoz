@@ -2,21 +2,9 @@ import type { SelectionResult, TemplateDef } from "../types";
 import { END } from "./fill";
 import { BLANK, runMachine, type RunOptions, type Transition, type TuringMachine } from "./machine";
 
-/**
- * Selection machine (§5.4).
- *
- * Tape:  campo1 … campoN  #  @PASTOREO m1 m2 …  @CULTIVO m1 …  @MIXTA …  ⊣
- * (the extracted field names, a separator, then each template header followed by its required markers).
- *
- * Phase 1 — compare. For every marker m to the right of "#":
- *   q_siguiente marks it "*m" and q_volver[m] walks left to "#"; q_comparar[m] keeps walking left over
- *   the extracted names: equal to m → q_encontrado[m], left blank → q_ausente[m]. Both walk right back
- *   to "*m" and write "✓m" or "✗m".
- * Phase 2 — count. q_contar walks the blocks again: a header "@X" becomes "=X" and appends the tally
- *   header "%X" after the end; each "✓m" becomes "+m" and appends a unary "1". q_retorno walks left to
- *   the last processed cell ("+" or "="). At "⊣" the machine accepts (q_fin).
- * Final tape (tail): ⊣ %PASTOREO 1 1 1 … %CULTIVO 1 1 … %MIXTA …
- */
+// The tape starts with extracted fields and required fields per template.
+// Comparisons mark each required field. A second pass writes unary tallies.
+// The final pass reads those tallies and writes RESULT:<id or ->:<tie>:<low>.
 const SEPARATOR = "#";
 const HEADER = "@";
 const DONE_HEADER = "=";
@@ -26,13 +14,49 @@ const IN_PROCESS = "*";
 const MATCH = "✓";
 const MISS = "✗";
 const COUNTED = "+";
+const RESULT = "RESULT:";
+const DOMAINS = ["", "PASTOREO", "CULTIVO", "MIXTA"] as const;
+
+interface Tally {
+  id: string;
+  total: number;
+  matched: number;
+}
+
+function readTallyCell(tallies: Tally[], symbol: string): void {
+  if (symbol.startsWith(TALLY_HEADER)) {
+    const [id, total] = symbol.slice(1).split(":");
+    if (id && total !== undefined) tallies.push({ id, total: Number(total), matched: 0 });
+  } else if (symbol === TALLY) {
+    const last = tallies.at(-1);
+    if (last) last.matched++;
+  }
+}
+
+function verdict(tallies: Tally[], domain?: string): string {
+  let best: Tally | undefined;
+  let tie = false;
+  for (const tally of tallies) {
+    if (tally.matched === 0 || (domain !== undefined && tally.id !== domain)) continue;
+    const difference = best ? tally.matched * best.total - best.matched * tally.total : 1;
+    const bothComplete = best && tally.matched === tally.total && best.matched === best.total;
+    if (difference > 0 || (difference === 0 && bothComplete && tally.total > (best?.total ?? 0))) {
+      best = tally;
+      tie = false;
+    } else if (difference === 0 && (!bothComplete || tally.total === best?.total)) {
+      tie = true;
+    }
+  }
+  const low = !best || 2 * best.matched < best.total;
+  return `${RESULT}${tie ? "-" : (best?.id ?? "-")}:${Number(tie)}:${Number(low)}`;
+}
 
 export function selectionTape(fieldNames: string[], templates: TemplateDef[]): string[] {
-  const blocks = templates.flatMap((t) => [HEADER + t.id, ...t.required]);
+  const blocks = templates.flatMap((t) => [HEADER + t.id + ":" + t.required.length, ...t.required]);
   return [...fieldNames, SEPARATOR, ...blocks, END];
 }
 
-export function selectionMachine(): TuringMachine {
+export function selectionMachine(requireDomain = false): TuringMachine {
   const go = (next: string, write: string, move: Transition["move"]): Transition => ({ next, write, move });
 
   return {
@@ -62,7 +86,9 @@ export function selectionMachine(): TuringMachine {
         case "q_contar_ini":
           return go(symbol === SEPARATOR ? "q_contar" : state, symbol, symbol === SEPARATOR ? "R" : "L");
         case "q_contar":
-          if (symbol === END) return go("q_fin", symbol, "S");
+          if (symbol === END) return requireDomain
+            ? go("q_dominio[0]", symbol, "L")
+            : go("q_resultado[[[]]]", symbol, "R");
           if (symbol.startsWith(HEADER))
             return go(`q_anotar[${TALLY_HEADER}${symbol.slice(1)}]`, DONE_HEADER + symbol.slice(1), "R");
           if (symbol.startsWith(MATCH)) return go(`q_anotar[${TALLY}]`, COUNTED + symbol.slice(1), "R");
@@ -72,6 +98,22 @@ export function selectionMachine(): TuringMachine {
         case "q_retorno":
           if (symbol.startsWith(COUNTED) || symbol.startsWith(DONE_HEADER)) return go("q_contar", symbol, "R");
           return go(state, symbol, "L");
+        case "q_dominio": {
+          if (symbol === BLANK) return go(`q_buscar_conteos[${param}]`, symbol, "R");
+          const mask = Number(param) | (symbol === "tipo_animal" ? 1 : symbol === "cultivo" ? 2 : 0);
+          return go(`q_dominio[${mask}]`, symbol, "L");
+        }
+        case "q_buscar_conteos":
+          return symbol === END
+            ? go(`q_resultado[${JSON.stringify([[], DOMAINS[Number(param)]])}]`, symbol, "R")
+            : go(state, symbol, "R");
+        case "q_resultado": {
+          const [tallies, domain] = JSON.parse(param) as [Tally[], string?];
+          if (symbol === BLANK) return go("q_fin", verdict(tallies, domain), "S");
+          readTallyCell(tallies, symbol);
+          const data = domain === undefined ? [tallies] : [tallies, domain];
+          return go(`q_resultado[${JSON.stringify(data)}]`, symbol, "R");
+        }
         default:
           return null;
       }
@@ -79,64 +121,30 @@ export function selectionMachine(): TuringMachine {
   };
 }
 
-/** Runs the selection machine and reads the tallies from the final tape. */
-// Materia §5.4: la simulación compara campos y escribe conteos unarios en la cinta.
-// ATENCIÓN: readTallies interpreta esa salida y el bucle con isBetter elige
-// la plantilla en TypeScript. El argmáximo NO se calcula dentro de la MT actual.
+// The control writes the verdict. The wrapper only decodes the machine's output.
 export function selectTemplate(
   fieldNames: string[],
   templates: TemplateDef[],
-  options: RunOptions = {},
+  options: RunOptions & { requireDomain?: boolean } = {},
 ): SelectionResult {
-  const run = runMachine(selectionMachine(), selectionTape(fieldNames, templates), {
+  const { requireDomain, ...runOptions } = options;
+  const run = runMachine(selectionMachine(requireDomain), selectionTape(fieldNames, templates), {
+    ...runOptions,
     outputSeparator: " ",
-    ...options,
   });
-  const tallies = readTallies(run.output.split(" "));
+  const cells = run.output.split(" ");
+  const tallies: Tally[] = [];
+  for (const symbol of cells.slice(cells.indexOf(END) + 1)) readTallyCell(tallies, symbol);
   const scores: SelectionResult["scores"] = {};
-  for (const t of templates) scores[t.id] = { matched: tallies.get(t.id) ?? 0, total: t.required.length };
-
-  let best: TemplateDef | null = null;
-  for (const t of templates) {
-    if (best === null || isBetter(scores[t.id], scores[best.id])) best = t;
+  for (const template of templates) {
+    const tally = tallies.find(({ id }) => id === template.id);
+    scores[template.id] = { matched: tally?.matched ?? 0, total: tally?.total ?? template.required.length };
   }
-  const bestScore = best ? scores[best.id] : undefined;
-  if (!run.accepted || !best || !bestScore || bestScore.matched === 0) {
+  const result = cells.at(-1);
+  if (!run.accepted || !result?.startsWith(RESULT)) {
     return { templateId: null, scores, tie: false, low: true, run };
   }
-  // Equal proportions only matter while the best template is incomplete; if both are complete,
-  // the one covering more fields (already preferred by isBetter) is the right choice.
-  const complete = bestScore.matched === bestScore.total;
-  const tie = !complete && templates.some((t) => t.id !== best.id && sameRatio(scores[t.id], bestScore));
-  const low = 2 * bestScore.matched < bestScore.total;
-  return { templateId: best.id, scores, tie, low, run };
-}
-
-type Score = { matched: number; total: number };
-
-/** Higher proportion wins (cross-multiplication, no floats); equal proportion → more matches wins. */
-function isBetter(a: Score | undefined, b: Score | undefined): boolean {
-  if (!a || !b) return false;
-  const left = a.matched * b.total;
-  const right = b.matched * a.total;
-  return left > right || (left === right && a.matched > b.matched);
-}
-
-function sameRatio(a: Score | undefined, b: Score): boolean {
-  return a !== undefined && a.matched * b.total === b.matched * a.total;
-}
-
-/** Reads "%X 1 1 … %Y 1 …" after the end mark into a count per template. */
-function readTallies(cells: string[]): Map<string, number> {
-  const tallies = new Map<string, number>();
-  let current: string | null = null;
-  for (const cell of cells.slice(cells.indexOf(END) + 1)) {
-    if (cell.startsWith(TALLY_HEADER)) {
-      current = cell.slice(1);
-      tallies.set(current, 0);
-    } else if (cell === TALLY && current !== null) {
-      tallies.set(current, (tallies.get(current) ?? 0) + 1);
-    }
-  }
-  return tallies;
+  const [, winner, tie, low] = result.split(":");
+  const templateId = templates.find(({ id }) => id === winner)?.id ?? null;
+  return { templateId, scores, tie: tie === "1", low: low === "1", run };
 }

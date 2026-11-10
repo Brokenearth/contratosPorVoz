@@ -41,7 +41,7 @@ const FIELDS: Record<string, FieldInfo> = {
   hectareas: {
     guide: "hectáreas del lote",
     question: "las hectáreas del lote",
-    isPresent: (f) => f.hectareas !== undefined,
+    isPresent: (f) => f.hectareas !== undefined || f.areaLocal !== undefined,
   },
   fecha: { guide: "Fecha", question: "la fecha", isPresent: (f) => f.fecha !== undefined },
   valor: {
@@ -111,9 +111,33 @@ export function questionFor(missing: string[]): string {
   return `Falta ${joinSpanish(missing.map((key) => infoOf(key)?.question ?? key))}.`;
 }
 
+export function validateFields(fields: ContractFields): string[] {
+  const errors: string[] = [];
+  const positive = (value: number) => Number.isSafeInteger(value) && value > 0;
+  const area = fields.areaLocal?.cantidad ?? fields.hectareas;
+  if (area !== undefined && !positive(area)) errors.push("Indique un área positiva.");
+  if (fields.duracion && !positive(fields.duracion.cantidad)) errors.push("Indique una duración positiva.");
+  if (fields.valor && !positive(fields.valor.monto)) errors.push("Indique un valor positivo y representable.");
+  if (animals(fields).some(({ cantidad }) => cantidad !== undefined && !positive(cantidad))) {
+    errors.push("Indique cantidades positivas de animales.");
+  }
+  if (fields.fecha) {
+    const { dia, mes, anio } = fields.fecha;
+    const leap = anio === undefined || (anio % 4 === 0 && (anio % 100 !== 0 || anio % 400 === 0));
+    const monthDays = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const maxDay = monthDays[mes - 1] ?? 0;
+    if (!positive(dia) || dia > maxDay || (anio !== undefined && (!positive(anio) || anio > 9999))) {
+      errors.push("Indique una fecha válida del calendario.");
+    }
+  }
+  return errors;
+}
+
 /** Combines what was already detected with the parsed answer; values in `next` win. */
 export function mergeFields(previous: ContractFields, next: ContractFields): ContractFields {
   const merged: ContractFields = { ...previous };
+  if (next.areaLocal !== undefined || (next.lote !== undefined && next.lote !== previous.lote)) delete merged.hectareas;
+  if (next.hectareas !== undefined || (next.lote !== undefined && next.lote !== previous.lote)) delete merged.areaLocal;
   for (const [key, value] of Object.entries(next)) {
     if (value !== undefined) Object.assign(merged, { [key]: value });
   }

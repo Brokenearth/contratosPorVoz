@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { runPipeline, type PipelineResult } from "../core/pipeline";
-import type { ContractFields } from "../core/types";
+import { runPipeline, type PipelineOptions, type PipelineResult } from "../core/pipeline";
+import type { ContractFields, TemplateDef } from "../core/types";
 import { ContractPanel } from "./ContractPanel";
 import { Conversation } from "./Conversation";
 import { Icon } from "./Icon";
@@ -11,7 +11,10 @@ import type { InputSource } from "./voice";
 interface Analysis {
   input: string;
   previous: ContractFields;
+  options: PipelineOptions;
+  originalInput?: string;
   result: PipelineResult;
+  draft: { markdown: string; template: TemplateDef } | null;
   id: number;
 }
 
@@ -19,16 +22,24 @@ export function App({ source }: { source?: InputSource }) {
   const [text, setText] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
 
-  function analyze(input: string, previous: ContractFields, force = false) {
-    setAnalysis((current) => ({
-      input,
-      previous,
-      result: runPipeline(input, previous, { force }),
-      id: (current?.id ?? 0) + 1,
-    }));
+  function analyze(
+    input: string,
+    previous: ContractFields,
+    options: PipelineOptions = {},
+    keepDraft = false,
+    originalInput?: string,
+  ) {
+    setAnalysis((current) => {
+      const result = runPipeline(input, previous, options);
+      const draft = result.contract && result.template
+        ? { markdown: result.contract.output, template: result.template }
+        : keepDraft ? (current?.draft ?? null) : null;
+      return { input, originalInput, previous, options, result, draft, id: (current?.id ?? 0) + 1 };
+    });
   }
 
   const result = analysis?.result;
+  const draft = analysis?.draft;
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -75,14 +86,27 @@ export function App({ source }: { source?: InputSource }) {
                 key={analysis.id}
                 result={result}
                 source={source}
-                onAnswer={(answer) => analyze(answer, result.fields)}
-                onForce={() => analyze(analysis.input, analysis.previous, true)}
+                onAnswer={(answer) => analyze(answer, result.fields, { confirmedNames: analysis.options.confirmedNames }, true)}
+                onForce={() => analyze(analysis.input, analysis.previous, { ...analysis.options, force: true }, true, analysis.originalInput)}
+                onConfirmNames={(confirmedNames) =>
+                  analyze(analysis.input, analysis.previous, { ...analysis.options, confirmedNames }, true, analysis.originalInput)
+                }
+                originalInput={analysis.originalInput}
+                onCorrect={(start, end, value) =>
+                  analyze(
+                    analysis.input.slice(0, start) + value + analysis.input.slice(end),
+                    analysis.previous,
+                    analysis.options,
+                    true,
+                    analysis.originalInput ?? analysis.input,
+                  )
+                }
               />
             )}
           </div>
           <div className="document-column">
-            {result?.contract && result.template ? (
-              <ContractPanel markdown={result.contract.output} template={result.template} />
+            {draft ? (
+              <ContractPanel markdown={draft.markdown} template={draft.template} previous={!result?.contract} />
             ) : (
               <section className="document-empty" aria-label="Vista previa del contrato">
                 <div className="document-empty-heading">

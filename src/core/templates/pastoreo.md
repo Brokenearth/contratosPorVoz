@@ -1,27 +1,29 @@
 ---
 id: PASTOREO
 titulo: Contrato de arrendamiento de lote para pastoreo
-requeridos: lote, hectareas, tipo_animal, cantidad_animales, raza, fecha, uso, duracion, valor
-opcionales: arrendador, arrendatario, animales_descripcion
+requeridos: lote, tipo_animal, fecha, uso, valor
+opcionales: hectareas, cantidad_animales, raza, duracion, arrendador, arrendatario, animales_descripcion
 ---
 
 # CONTRATO DE ARRENDAMIENTO DE LOTE PARA PASTOREO
 
-## Partes
+[[?estado_borrador]]> Borrador incompleto. Pendientes: {{estado_borrador}}
+
+[[/estado_borrador]]## Partes
 
 Entre los suscritos, {{arrendador}}, mayor de edad, quien en adelante se denominará el ARRENDADOR, y {{arrendatario}}, mayor de edad, quien en adelante se denominará el ARRENDATARIO, se celebra el presente contrato de arrendamiento de lote rural para pastoreo, que se regirá por las siguientes cláusulas.
 
 ## Objeto
 
-CLÁUSULA PRIMERA. El ARRENDADOR entrega a título de arrendamiento al ARRENDATARIO el lote {{lote}}, con una extensión de {{hectareas}}, para que sea utilizado exclusivamente en el pastoreo de animales, en las condiciones de este contrato.
+CLÁUSULA PRIMERA. El ARRENDADOR entrega a título de arrendamiento al ARRENDATARIO el lote {{lote}}[[?hectareas]], con una extensión de {{hectareas}}[[/hectareas]], para que sea utilizado exclusivamente en el pastoreo de animales, en las condiciones de este contrato.
 
 ## Destinación
 
-CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote {{lote}} ({{hectareas}}) un máximo de {{cantidad_animales}} {{tipo_animal}} de raza {{raza}}, {{destinados}} exclusivamente a la {{uso}}, durante {{duracion}}.[[?animales_descripcion]] Los animales autorizados son: {{animales_descripcion}}.[[/animales_descripcion]] No podrá ingresar un número mayor de animales ni darle al lote un uso distinto sin autorización escrita del ARRENDADOR.
+CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote {{lote}}[[?hectareas]] ({{hectareas}})[[/hectareas]] [[?cantidad_animales]]un máximo de {{cantidad_animales}} [[/cantidad_animales]]{{tipo_animal}}[[?raza]] de raza {{raza}}[[/raza]], {{destinados}} exclusivamente a la {{uso}}[[?duracion]], durante {{duracion}}[[/duracion]].[[?animales_descripcion]] Los animales autorizados son: {{animales_descripcion}}.[[/animales_descripcion]][[?cantidad_animales]] No podrá ingresar un número mayor de animales.[[/cantidad_animales]] No podrá darle al lote un uso distinto sin autorización escrita del ARRENDADOR.
 
 ## Duración
 
-CLÁUSULA TERCERA. El término de duración del presente contrato es de {{duracion}}[[?fecha]], contados a partir del {{fecha}}[[/fecha]]. Al vencimiento, el contrato podrá prorrogarse por acuerdo escrito entre las partes.
+CLÁUSULA TERCERA. El arrendamiento comienza el {{fecha}}.[[?duracion]] Tiene una duración de {{duracion}}. Al vencimiento, el contrato podrá prorrogarse por acuerdo escrito entre las partes.[[/duracion]]
 
 ## Precio y forma de pago
 
@@ -33,11 +35,11 @@ CLÁUSULA QUINTA. Son obligaciones del ARRENDADOR: a) entregar el lote en buen e
 
 ## Obligaciones del ARRENDATARIO
 
-CLÁUSULA SEXTA. Son obligaciones del ARRENDATARIO: a) pagar el canon en la forma y fechas pactadas; b) no exceder la cantidad de animales autorizada ni sobrepastorear el lote; c) mantener los animales vacunados y al día con los registros sanitarios exigidos por la autoridad competente; d) conservar las cercas, pastos, árboles y fuentes de agua; e) no subarrendar ni ceder el contrato sin autorización escrita; f) restituir el lote al terminar el contrato en el estado en que lo recibió, salvo el deterioro normal por el uso.
+CLÁUSULA SEXTA. Son obligaciones del ARRENDATARIO: a) pagar el canon en la forma y fechas pactadas; b) [[?cantidad_animales]]no exceder la cantidad de animales autorizada y [[/cantidad_animales]]evitar el sobrepastoreo del lote; c) mantener los animales vacunados y al día con los registros sanitarios exigidos por la autoridad competente; d) conservar las cercas, pastos, árboles y fuentes de agua; e) no subarrendar ni ceder el contrato sin autorización escrita; f) restituir el lote al terminar el contrato en el estado en que lo recibió, salvo el deterioro normal por el uso.
 
 ## Terminación
 
-CLÁUSULA SÉPTIMA. El contrato terminará: a) por el vencimiento del término pactado; b) por mutuo acuerdo entre las partes; c) por el incumplimiento de cualquiera de las obligaciones aquí pactadas, en especial la falta de pago del canon o el exceso de animales en el lote, caso en el cual la parte cumplida podrá darlo por terminado mediante aviso escrito con quince (15) días de anticipación.
+CLÁUSULA SÉPTIMA. El contrato terminará: a) por el vencimiento del término pactado; b) por mutuo acuerdo entre las partes; c) por el incumplimiento de cualquiera de las obligaciones aquí pactadas, en especial la falta de pago del canon[[?cantidad_animales]] o el exceso de animales en el lote[[/cantidad_animales]], caso en el cual la parte cumplida podrá darlo por terminado mediante aviso escrito con quince (15) días de anticipación.
 
 ## Resolución de conflictos
 

@@ -1,5 +1,6 @@
-import type { AnimalItem, ContractFields, ParseTree, Token } from "../types";
+import type { AnimalItem, ContractFields, ParseTree, PartyNames, Token } from "../types";
 import { normalize } from "./predict";
+import { normalizePartyName } from "../partyNames";
 
 const MONTHS = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -54,7 +55,7 @@ function animalItem(itemNode: ParseTree): AnimalItem {
   const count = tokenOf(itemNode, "num");
   if (count) item.cantidad = num(count);
   const breed = leavesOf(itemNode, "RAZAOPT").find((t) => t.type === "RAZA");
-  if (breed) item.raza = text(breed);
+  if (breed) item.raza = String(breed.value);
   const subopt = child(itemNode, "SUBOPT");
   const sub = subopt ? animalList(child(subopt, "LISTA")) : [];
   if (sub.length > 0) item.sub = sub;
@@ -74,7 +75,7 @@ function amount(monto: ParseTree): { monto: number; moneda: string } {
   return { monto: value, moneda: currency };
 }
 
-function visit(node: ParseTree, fields: ContractFields): void {
+function visit(node: ParseTree, fields: ContractFields, conflicts: Map<keyof PartyNames, Set<string>>): void {
   const tokens = leaves(node);
   switch (node.symbol) {
     case "ANIMALES":
@@ -83,9 +84,16 @@ function visit(node: ParseTree, fields: ContractFields): void {
     case "LOTE": {
       const idTokens = leavesOf(node, "ID");
       const first = idTokens[0];
-      if (first) fields.lote = first.type === "NUM" ? String(first.value) : properName(idTokens);
-      const area = leavesOf(node, "AREAOPT").find((t) => t.type === "NUM");
-      if (area) fields.hectareas = num(area);
+      if (first) {
+        fields.lote = first.type !== "NUM" ? properName(idTokens)
+          : /^[0-9]/.test(first.lexeme) ? first.lexeme : String(first.value);
+      }
+      const [area, unit] = leavesOf(node, "AREAOPT").filter((token) => token.type !== "PALABRA_CLAVE");
+      if (area && unit) {
+        const unitName = unit.value;
+        if (unitName === "fanegada" || unitName === "cuadra") fields.areaLocal = { cantidad: num(area), unidad: unitName };
+        else fields.hectareas = num(area);
+      }
       return;
     }
     case "VALOR": {
@@ -112,7 +120,7 @@ function visit(node: ParseTree, fields: ContractFields): void {
     }
     case "CULTIVO": {
       const crop = tokens[tokens.length - 1];
-      if (crop) fields.cultivo = text(crop);
+      if (crop) fields.cultivo = String(crop.value);
       return;
     }
     case "INSUMOS": {
@@ -126,12 +134,22 @@ function visit(node: ParseTree, fields: ContractFields): void {
       if (!role || tail.length === 0) return;
       const who = normalize(role.lexeme);
       if (tail[0] && normalize(tail[0].lexeme) === "aporta") fields.insumos = who;
-      else if (who === "arrendador") fields.arrendador = properName(tail);
-      else fields.arrendatario = properName(tail);
+      else {
+        const name = normalizePartyName(tail.filter((token) => token.type === "NOMBRE").map((token) => token.lexeme).join(" "));
+        if (!name) return;
+        const key = who === "arrendador" ? "arrendador" : "arrendatario";
+        const conflict = conflicts.get(key);
+        const previous = fields[key];
+        if (conflict) conflict.add(name);
+        else if (previous && previous !== name) {
+          conflicts.set(key, new Set([previous, name]));
+          delete fields[key];
+        } else fields[key] = name;
+      }
       return;
     }
     default:
-      for (const c of node.children) visit(c, fields);
+      for (const c of node.children) visit(c, fields, conflicts);
   }
 }
 
@@ -139,8 +157,12 @@ function visit(node: ParseTree, fields: ContractFields): void {
 // Materia: extracción semántica después del análisis sintáctico.
 // Se recorre el árbol de derivación para dar significado a los tokens:
 // el NUM dentro de LOTE identifica el predio; el NUM de ITEM cuenta animales.
-export function extractFields(tree: ParseTree | null): ContractFields {
+export function extractFields(tree: ParseTree | null, warnings: string[] = []): ContractFields {
   const fields: ContractFields = {};
-  if (tree) visit(tree, fields);
+  const conflicts = new Map<keyof PartyNames, Set<string>>();
+  if (tree) visit(tree, fields, conflicts);
+  for (const [role, names] of conflicts) {
+    warnings.push(`Hay varios nombres para ${role}: ${[...names].join(", ")}. Confirme el correcto en su casilla.`);
+  }
   return fields;
 }

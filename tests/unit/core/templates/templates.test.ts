@@ -51,10 +51,10 @@ describe("TEMPLATES", () => {
   it("loads the three templates with their required fields", () => {
     expect(TEMPLATES.map((t) => t.id)).toEqual(["PASTOREO", "CULTIVO", "MIXTA"]);
     expect(getTemplate("PASTOREO").required).toContain("tipo_animal");
-    expect(getTemplate("CULTIVO").required).toContain("insumos");
+    expect(getTemplate("CULTIVO").optional).toContain("insumos");
   });
 
-  it.each(TEMPLATES)("$id preserves the clauses without the draft notice", (template) => {
+  it.each(TEMPLATES)("$id preserves the clauses and declares a conditional draft notice", (template) => {
     for (const text of [
       "Objeto",
       "Duración",
@@ -66,8 +66,8 @@ describe("TEMPLATES", () => {
       "FIRMAS",
     ]) {
       expect(template.body).toContain(text);
-      expect(template.body).not.toMatch(/borrador|generado automáticamente/i);
     }
+    expect(template.body).toContain("[[?estado_borrador]]");
   });
 
   it.each(TEMPLATES)("$id fills completely when every field is given", (template) => {
@@ -85,6 +85,7 @@ describe("TEMPLATES", () => {
     expect(result.pending).toEqual([]);
     for (const leftover of ["{{", "}}", "[[", "]]"]) expect(result.run.output).not.toContain(leftover);
     expect(result.run.output).toContain("Pedro Gómez");
+    expect(result.run.output).not.toMatch(/borrador incompleto|generado automáticamente/i);
   });
 
   it.each(TEMPLATES)("$id uses every declared field as a marker", (template) => {
@@ -160,7 +161,7 @@ describe("§6 example end to end", () => {
     expect(result.run.output).toContain(
       "CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote La Esperanza (5 hectáreas) un máximo de 20 vacas de raza Holstein, destinadas exclusivamente a la producción de leche, durante 12 meses.",
     );
-    expect(result.pending).toEqual(["valor"]);
+    expect(result.pending).toEqual(["fecha", "valor"]);
     expect(result.run.output).not.toContain("[[");
   });
 });

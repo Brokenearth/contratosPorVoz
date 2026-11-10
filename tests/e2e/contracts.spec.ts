@@ -96,6 +96,57 @@ test("generate anyway leaves pending markers", async ({ page }) => {
   expect(file.content).toContain("{{valor}}");
 });
 
+for (const [kind, use] of [
+  ["pastoreo", "para 4 vacas para ceba"],
+  ["cultivo", "para cultivo de maíz"],
+  ["mixta", "para 4 vacas para ceba y para cultivo de maíz"],
+] as const) {
+  test(`${kind}: reviewed party names appear in the downloaded header and signatures`, async ({ page }) => {
+    await analyze(
+      page,
+      `arrendador nombre Luis Toro lote 20 de 3 hectáreas ${use} ` +
+        "por 6 meses desde el 1 de diciembre de 2026 valor 2 millones de pesos, el arrendatario aporta los insumos",
+    );
+    await expect(page.getByLabel("Arrendador", { exact: true })).toHaveValue("Luis Toro");
+    await page.getByLabel("Arrendador", { exact: true }).fill("Juan de la Cruz");
+    await page.getByLabel("Arrendatario", { exact: true }).fill("María José Gómez");
+    await page.getByRole("button", { name: "Confirmar nombres" }).click();
+    const { content, name } = await downloadContract(page);
+    expect(name).toBe(`contrato-${kind}.md`);
+    const [header, signatures] = content.split("## FIRMAS");
+    expect(header).toContain("Entre los suscritos, Juan de la Cruz");
+    expect(header).toContain("María José Gómez");
+    expect(signatures).toMatch(/\| Juan de la Cruz\s+\| María José Gómez\s+\|/);
+    expect(content).not.toContain("Luis Toro");
+  });
+}
+
+test("a suggested breed changes the draft only after confirmation", async ({ page }) => {
+  await analyze(page, "lote 20 para 4 vacas de raza norolando para ceba desde el 2 de marzo valor 900 mil pesos");
+  await expect(page.getByRole("button", { name: "Confirmar Normando" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Confirmar Girolando" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Descargar .md" })).toHaveCount(0);
+  await analyze(page, "lote 20 para 4 vacas de raza holsten para ceba desde el 2 de marzo valor 900 mil pesos");
+  await expect(page.getByRole("button", { name: "Descargar .md" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Confirmar Holstein" }).click();
+  await page.getByText("Transcripción original", { exact: true }).click();
+  const review = page.getByRole("region", { name: "Revise los datos" });
+  await expect(review.getByText(/raza holsten para ceba/)).toBeVisible();
+  expect((await downloadContract(page)).content).toContain("4 vacas de raza Holstein");
+});
+
+test("a rejected answer keeps the previous draft and shows the cause", async ({ page }) => {
+  await analyze(page, "lote 20 para cultivo de maíz");
+  await page.getByRole("button", { name: "Generar de todos modos" }).click();
+  const first = await downloadContract(page);
+  expect(first.content).toContain("Borrador incompleto");
+  await page.getByLabel("Su respuesta").fill("fin");
+  await page.getByRole("button", { name: "Responder" }).click();
+  await expect(page.getByRole("heading", { name: "Borrador anterior" })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("'fin' sin 'de los cuales'");
+  expect((await downloadContract(page)).content).toBe(first.content);
+});
+
 test("voice: a fake SpeechRecognition fills the editable textarea", async ({ page }) => {
   await page.addInitScript(() => {
     class FakeRecognition {

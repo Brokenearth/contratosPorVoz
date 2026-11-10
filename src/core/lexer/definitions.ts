@@ -86,6 +86,11 @@ const NUMBER_WORDS = [
   "veinte",
 ];
 
+export const BREEDS = [
+  "holstein", "gir", "normando", "brahman", "jersey", "angus", "cebú", "simmental",
+  "criollo", "guzerat", "romosinuano", "girolando", "pardo",
+] as const;
+
 const MONTHS = [
   "enero",
   "febrero",
@@ -124,14 +129,11 @@ export const TOKEN_DEFINITIONS: readonly TokenDefinition[] = [
   fromWords("MES", "MES", [...MONTHS.map((word, i) => ({ word, value: i + 1 })), { word: "setiembre", value: 9 }]),
   fromWords("ANIMAL", "ANIMAL", [
     ...forms("s", "vaca", "toro", "caballo", "yegua", "cabra", "oveja", "cerdo"),
-    ...forms("s", "ternero", "ternera", "novillo", "novilla", "becerro", "becerra", "mula"),
-    ...forms("es", "buey"),
+    ...forms("s", "ternero", "ternera", "novillo", "novilla", "becerro", "becerra", "mula", "bovino"),
+    ...forms("es", "buey", "res"),
   ]),
-  fromWords("RAZA", "RAZA", [
-    ...forms("", "holstein", "gir", "normando", "brahman", "jersey", "angus", "cebú"),
-    ...forms("", "simmental", "criollo", "guzerat", "romosinuano", "girolando", "pardo"),
-  ]),
-  fromWords("UNIDAD_TIEMPO", "UNIDAD_TIEMPO", [...forms("s", "día", "año", "semana"), ...forms("es", "mes")]),
+  fromWords("RAZA", "RAZA", forms("", ...BREEDS)),
+  fromWords("UNIDAD_TIEMPO", "UNIDAD_TIEMPO", [...forms("s", "día", "año", "semana", "quincena"), ...forms("es", "mes")]),
   fromWords("UNIDAD_AREA", "UNIDAD_AREA", forms("s", "hectárea", "fanegada", "cuadra")),
   fromWords("MONEDA", "MONEDA", [...forms("s", "peso"), ...forms("es", "millón"), ...forms("", "mil")]),
   fromWords(
@@ -144,7 +146,7 @@ export const TOKEN_DEFINITIONS: readonly TokenDefinition[] = [
     ...forms("", "levante", "agricultura", "producción"),
   ]),
   fromWords("CULTIVO", "CULTIVO", [
-    ...forms("s", "papa", "yuca", "plátano", "arveja", "tomate", "cebolla", "aguacate", "naranja", "mango"),
+    ...forms("s", "papa", "yuca", "plátano", "banano", "habichuela", "arveja", "tomate", "cebolla", "aguacate", "naranja", "mango"),
     ...forms("es", "frijol", "limón"),
     ...forms("", "maíz", "café", "cacao", "arroz", "caña", "sorgo", "algodón", "pasto"),
   ]),
@@ -155,10 +157,10 @@ export const TOKEN_DEFINITIONS: readonly TokenDefinition[] = [
       ...forms("s", "lote"),
       ...forms("", "en", "el", "la", "los", "las", "de", "del", "al", "a", "raza", "por", "para", "un", "una"),
       ...forms("", "valor", "desde", "hasta", "durante", "con", "se", "cuales", "fin"),
-      ...forms("", "arrendador", "arrendadora", "arrendatario", "arrendataria", "aporta", "aportan", "aporte"),
+      ...forms("", "arrendador", "arrendadora", "arrendatario", "arrendataria", "nombre", "aporta", "aportan", "aporte"),
     ]),
     value: (normalized) => normalized,
   },
   { name: "COMA", type: "COMA", regex: ",", value: () => "," },
-  { name: "NOMBRE", type: "NOMBRE", regex: "LETRA LETRA*", value: (_normalized, original) => original },
+  { name: "NOMBRE", type: "NOMBRE", regex: "LETRA LETRA* ((-|') LETRA LETRA*)*", value: (_normalized, original) => original },
 ];

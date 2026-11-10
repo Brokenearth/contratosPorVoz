@@ -1,13 +1,16 @@
-import { mergeFields, missingFields, questionFor } from "./dialog";
+import { mergeFields, missingFields, questionFor, validateFields } from "./dialog";
 import { tokenize } from "./lexer";
+import { suggestBreedCorrections, type TranscriptionSuggestion } from "./lexer/similarity";
 import { parseContract, type ParseOutcome } from "./parser";
+import { normalizePartyName, PARTY_ROLES } from "./partyNames";
 import { contractValues, extractedFieldNames, getTemplate, TEMPLATES } from "./templates";
 import { fillTemplate, selectTemplate } from "./turing";
-import type { ContractFields, LexResult, SelectionResult, TemplateDef, TuringRun } from "./types";
+import type { ContractFields, LexResult, PartyNames, SelectionResult, TemplateDef, TuringRun } from "./types";
 
 export interface PipelineOptions {
   /** Generate the contract even if required fields are missing (they stay as `{{campo}}`). */
   force?: boolean;
+  confirmedNames?: PartyNames;
 }
 
 export interface PipelineResult {
@@ -15,6 +18,7 @@ export interface PipelineResult {
   parse: ParseOutcome;
   /** Fields of this utterance merged over `previousFields`. */
   fields: ContractFields;
+  confirmedNames?: PartyNames;
   selection: SelectionResult;
   template: TemplateDef | null;
   /** Required fields of the selected template that are still missing. */
@@ -23,6 +27,9 @@ export interface PipelineResult {
   question: string;
   /** Fill-machine run; null until the required fields are complete (or `force`). */
   contract: TuringRun | null;
+  fill: TuringRun | null;
+  blocked: boolean;
+  suggestions: TranscriptionSuggestion[];
   /** Lexical and syntax errors, plus words skipped by the parser's error recovery, as readable messages. */
   errors: string[];
 }
@@ -41,19 +48,38 @@ export function runPipeline(
 ): PipelineResult {
   const lex = tokenize(text);
   const parse = parseContract(lex.tokens);
-  const fields = mergeFields(previousFields, parse.fields);
-  const selection = selectTemplate(extractedFieldNames(fields), TEMPLATES);
+  const canMerge = parse.ok && lex.errors.length === 0;
+  const fields = mergeFields(previousFields, canMerge ? parse.fields : {});
+  const partyWarnings: string[] = [];
+  const confirmedNames = options.confirmedNames;
+  for (const role of PARTY_ROLES) {
+    if (!confirmedNames || !Object.hasOwn(confirmedNames, role)) continue;
+    const confirmed = normalizePartyName(confirmedNames[role] ?? "");
+    const detected = parse.fields[role];
+    if (confirmed && detected && confirmed !== detected) {
+      partyWarnings.push(`El dictado propone «${detected}» para ${role}. Se conservó «${confirmed}».`);
+    }
+    fields[role] = confirmed;
+  }
+  const selection = selectTemplate(extractedFieldNames(fields), TEMPLATES, { requireDomain: true });
   const template = selection.templateId === null ? null : getTemplate(selection.templateId);
   const missing = template ? missingFields(fields, template.required) : [];
-  const question = template ? questionFor(missing) : NO_TEMPLATE_QUESTION;
-  const ready = template !== null && (missing.length === 0 || options.force === true);
-  const contract = ready ? fillTemplate(template.body, contractValues(fields)).run : null;
-  const errors = [
-    ...lex.errors.map((e) => `${e.message} en la posición ${e.position}.`),
+  const missingQuestion = questionFor(missing);
+  const failures = [
+    ...lex.errors.map((error) => `${error.message} en la posición ${error.position}.`),
     ...parse.errors,
-    ...parse.warnings,
+    ...validateFields(fields),
   ];
-  return { lex, parse, fields, selection, template, missing, question, contract, errors };
+  const ready = template !== null && failures.length === 0 && (missing.length === 0 || options.force === true);
+  const pending = missingQuestion.replace(/^Falta /, "");
+  const fill = ready ? fillTemplate(template.body, contractValues(fields, pending)).run : null;
+  if (fill && !fill.accepted) failures.push(`No se completó el llenado. ${fill.snapshots.at(-1)?.note ?? ""}`);
+  const blocked = failures.length > 0;
+  const contract = fill?.accepted ? fill : null;
+  const question = failures[0] ?? (template ? missingQuestion : NO_TEMPLATE_QUESTION);
+  const errors = [...failures, ...parse.warnings, ...partyWarnings];
+  const suggestions = parse.ok ? [] : suggestBreedCorrections(lex.tokens);
+  return { lex, parse, fields, confirmedNames, selection, template, missing, question, contract, fill, blocked, errors, suggestions };
 }
 
 /** Example dictations for the UI, covering the three templates. */

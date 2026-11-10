@@ -1,5 +1,6 @@
 import type { Token } from "../types";
 import { normalize } from "./normalize";
+import { PARTY_ALIASES } from "./parties";
 
 /**
  * Synonym dictionary: canonical phrase ← phrases that mean the same in a dictation.
@@ -7,7 +8,7 @@ import { normalize } from "./normalize";
  * Phrases are written in lowercase without accents and matched against whole tokens.
  */
 export const SYNONYMS: Readonly<Record<string, readonly string[]>> = {
-  arriendo: ["doy en arriendo", "entrego en arriendo", "doy en alquiler", "rento"],
+  arriendo: ["doy en arriendo", "entrego en arriendo", "doy en alquiler", "rento", "alquilamos"],
   "se arrienda": ["se da en arriendo", "se entrega en arriendo", "se da en alquiler", "se renta"],
   "en el lote": ["en la finca", "en la parcela", "en la hacienda"],
   "el lote": ["la finca", "la parcela", "la hacienda"],
@@ -30,15 +31,23 @@ export const SYNONYMS: Readonly<Record<string, readonly string[]>> = {
     "por la suma de", "por un canon de", "por un precio de", "por un monto de", "por el valor de", "por el precio de",
     "por valor de",
   ],
-  pesos: ["pesos colombianos", "cop"],
-  vacas: ["reses", "vacunos", "bovinos", "cabezas de ganado"],
-  arrendador: ["propietario", "propietaria", "dueño", "dueña", "arrendante"],
-  arrendatario: ["inquilino", "inquilina"],
+  // Animal, breed, use and crop aliases preserve the entity or action.
+  bovinos: ["vacunos", "ganado bovino"],
+  novilla: ["vaquilla"],
+  novillas: ["vaquillas"],
+  holstein: ["holstein friesian"],
+  simmental: ["simmenthal"],
+  "para ceba": ["para engorde"],
+  "para cultivo de": ["para sembrar", "para la siembra de"],
+  septiembre: ["setiembre"],
+  hectáreas: ["ha"],
+  pesos: ["pesos colombianos", "pesos cop", "cop"],
+  ...PARTY_ALIASES,
   "los insumos los aporta el arrendador": [
-    "los insumos corren por cuenta del arrendador", "el arrendador pone los insumos", "el arrendador suministra los insumos",
+    "los insumos corren por cuenta del arrendador", "el arrendador pone los insumos", "el arrendador suministra los insumos", "el arrendador corre con los insumos",
   ],
   "los insumos los aporta el arrendatario": [
-    "los insumos corren por cuenta del arrendatario", "el arrendatario pone los insumos", "el arrendatario suministra los insumos",
+    "los insumos corren por cuenta del arrendatario", "el arrendatario pone los insumos", "el arrendatario suministra los insumos", "el arrendatario corre con los insumos",
   ],
   "": ["aproximadamente", "mas o menos", "cerca de", "alrededor de", "unas", "unos"],
 };
@@ -57,10 +66,14 @@ const RULES: readonly Rule[] = Object.entries(SYNONYMS)
 const MAX_PASSES = 3;
 
 function ruleAt(tokens: Token[], i: number): Rule | undefined {
-  return RULES.find((rule) => rule.words.every((word, k) => {
-    const token = tokens[i + k];
-    return token !== undefined && normalize(token.lexeme) === word;
-  }));
+  return RULES.find((rule) => {
+    if (rule.canonical === "hectáreas" &&
+        (tokens[i - 1]?.type !== "NUM" || normalize(tokens[i - 2]?.lexeme ?? "") !== "de")) return false;
+    return rule.words.every((word, k) => {
+      const token = tokens[i + k];
+      return token !== undefined && !token.partyName && normalize(token.lexeme) === word;
+    });
+  });
 }
 
 function rewritePass(tokens: Token[], text: string, scan: (text: string) => Token[]): Token[] {

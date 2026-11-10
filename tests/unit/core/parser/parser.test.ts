@@ -27,7 +27,7 @@ describe("grammar", () => {
     const text = formatGrammar(grammar);
     expect(text).toContain("CONTRATO → CLAUSULA CONTRATO | λ");
     expect(text).toContain('SUBOPT → "de" "los" "cuales" LISTA "fin" | λ');
-    expect(text).toContain('RESTO → "," ITEM RESTO | "y" ITEM | λ');
+    expect(text).toContain('RESTO → "," ITEM RESTO | "y" ITEM | "e" ITEM | λ');
   });
 });
 
