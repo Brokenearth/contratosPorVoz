@@ -10,6 +10,7 @@ export interface TokenDefinition {
   name: string;
   type: TokenType;
   regex: string;
+  spellings?: readonly { value: string; meaning: string }[];
   /** Value of a matched lexeme (`normalized` is lowercase without accents). */
   value: (normalized: string, original: string) => string | number;
 }
@@ -58,7 +59,14 @@ function wordsValue(words: readonly Word[]): TokenDefinition["value"] {
 }
 
 function fromWords(name: string, type: TokenType, words: readonly Word[]): TokenDefinition {
-  return { name, type, regex: wordsRegex(words), value: wordsValue(words) };
+  const spellings = words.flatMap(({ word, plural, value }) => {
+    const meaning = String(value ?? word);
+    const singular = { value: word, meaning };
+    if (!plural) return [singular];
+    const pluralBase = plural === "es" ? normalize(word) : word;
+    return [singular, { value: pluralBase + plural, meaning }];
+  });
+  return { name, type, regex: wordsRegex(words), value: wordsValue(words), spellings };
 }
 
 const forms = (plural: Plural, ...list: string[]): Word[] => list.map((word) => ({ word, plural }));

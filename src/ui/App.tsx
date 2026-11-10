@@ -5,6 +5,7 @@ import { ContractPanel } from "./ContractPanel";
 import { Conversation } from "./Conversation";
 import { Icon } from "./Icon";
 import { InputPanel } from "./InputPanel";
+import { Panel } from "./Panel";
 import { TheoryTabs } from "./theory/TheoryTabs";
 import type { InputSource } from "./voice";
 
@@ -21,6 +22,7 @@ interface Analysis {
 export function App({ source }: { source?: InputSource }) {
   const [text, setText] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [showTheory, setShowTheory] = useState(false);
 
   function analyze(
     input: string,
@@ -34,7 +36,11 @@ export function App({ source }: { source?: InputSource }) {
       const draft = result.contract && result.template
         ? { markdown: result.contract.output, template: result.template }
         : keepDraft ? (current?.draft ?? null) : null;
-      return { input, originalInput, previous, options, result, draft, id: (current?.id ?? 0) + 1 };
+      return {
+        input: result.analyzedText,
+        originalInput: originalInput ?? (result.analyzedText !== input ? input : undefined),
+        previous, options, result, draft, id: (current?.id ?? 0) + 1,
+      };
     });
   }
 
@@ -54,7 +60,7 @@ export function App({ source }: { source?: InputSource }) {
           </a>
           <nav aria-label="Navegación principal">
             <a href="#redactar">Redactar</a>
-            {analysis && <a href="#teoria">Cómo funciona</a>}
+            {analysis && <a href="#teoria" onClick={() => setShowTheory(true)}>Laboratorio educativo</a>}
           </nav>
           <span className="course-label">Lenguajes y autómatas</span>
         </div>
@@ -151,13 +157,29 @@ export function App({ source }: { source?: InputSource }) {
           </div>
         </div>
         {analysis && result && (
-          <TheoryTabs
-            key={analysis.id}
-            result={result}
-            runId={analysis.id}
-            input={analysis.input}
-            isAnswer={Object.keys(analysis.previous).length > 0}
-          />
+          <Panel id="teoria" title="Cómo funciona por dentro" actions={<span className="section-number">ESTUDIO</span>}>
+            <p className="mb-3 text-sm">Material de estudio para seguir el análisis del texto y la generación del Markdown.</p>
+            <button
+              type="button"
+              className="btn-secondary"
+              aria-expanded={showTheory}
+              aria-controls="recorrido-educativo"
+              onClick={() => setShowTheory((open) => !open)}
+            >
+              {showTheory ? "Cerrar laboratorio educativo" : "Abrir laboratorio educativo"}
+            </button>
+            <div id="recorrido-educativo" hidden={!showTheory} className="mt-4">
+              {showTheory && (
+                <TheoryTabs
+                  key={analysis.id}
+                  result={result}
+                  runId={analysis.id}
+                  input={analysis.input}
+                  isAnswer={Object.keys(analysis.previous).length > 0}
+                />
+              )}
+            </div>
+          </Panel>
         )}
         <footer className="site-footer">
           <span>Contratos rurales por voz</span>

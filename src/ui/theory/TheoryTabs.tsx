@@ -5,7 +5,6 @@ import type { ParseTree } from "../../core/types";
 import { contractValues } from "../../core/templates";
 import { fillMachine } from "../../core/turing/fill";
 import { selectionMachine } from "../../core/turing/selection";
-import { Panel } from "../Panel";
 import { LexerAutomata } from "./LexerAutomata";
 import { StackViewer } from "./StackViewer";
 import { TuringViewer } from "./TuringViewer";
@@ -205,7 +204,7 @@ export function TheoryTabs({
   input: string;
   isAnswer: boolean;
 }) {
-  const [tab, setTab] = useState<Tab>("Tokens");
+  const [tab, setTab] = useState<Tab>(result.parse.ok ? "Árbol de derivación" : "Pila");
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const content: Record<Tab, ReactNode> = {
     Tokens: <TokensTab result={result} />,
@@ -216,14 +215,14 @@ export function TheoryTabs({
     "Máquina de Turing": <TuringTab result={result} />,
   };
   return (
-    <Panel id="teoria" title="Cómo funciona por dentro" actions={<span className="section-number">LABORATORIO</span>}>
+    <>
       <div className="theory-intro">
-        <p>Explore el camino de sus palabras hasta el contrato.</p>
+        <p>Empiece por el árbol para leer la estructura. Abra Pila para seguir las operaciones que lo construyen.</p>
         <div className="pipeline-map" aria-label="Etapas del procesamiento">
           <span>Texto de entrada</span>
-          <span>AFD · Tokens</span>
-          <span>Pila · Gramática</span>
-          <span>MT · Plantilla y llenado</span>
+          <span>ER, AFN-λ y AFD · Tokens</span>
+          <span>Gramática y pila · Árbol</span>
+          <span>Máquinas de Turing · Plantilla y llenado</span>
           <span>Contrato</span>
         </div>
         <details className="analyzed-input">
@@ -289,6 +288,6 @@ export function TheoryTabs({
       >
         {content[tab]}
       </div>
-    </Panel>
+    </>
   );
 }

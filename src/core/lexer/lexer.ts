@@ -93,5 +93,6 @@ function scan(text: string): LexResult {
 /** Lexical analysis: DFA scan, then the synonym dictionary rewrites phrases into canonical tokens. */
 export function tokenize(text: string): LexResult {
   const result = scan(text);
-  return { ...result, tokens: applySynonyms(groupPartyNames(result.tokens, text), text, (canonical) => scan(canonical).tokens) };
+  const grouped = groupPartyNames(result.tokens, text);
+  return { ...result, warnings: grouped.warnings, tokens: applySynonyms(grouped.tokens, text, (canonical) => scan(canonical).tokens) };
 }

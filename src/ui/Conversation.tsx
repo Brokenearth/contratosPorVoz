@@ -92,9 +92,19 @@ export function Conversation({ result, onAnswer, onForce, onConfirmNames, origin
           <p>{originalInput}</p>
         </details>
       )}
+      {result.corrections.length > 0 && (
+        <div className="pending-note">
+          <p>Correcciones aplicadas al dictado</p>
+          <ul className="list-disc pl-5">
+            {result.corrections.map(({ original, value }, index) => (
+              <li key={index}>«{original}» → «{value}»</li>
+            ))}
+          </ul>
+        </div>
+      )}
       {result.suggestions.map(({ original, start, end, candidates }) => (
         <div className="pending-note" key={start}>
-          <p>Revise la raza «{original}» antes de continuar.</p>
+          <p>Elija la palabra que quiso decir en lugar de «{original}».</p>
           {candidates.map(({ value }) => (
             <button className="btn-secondary" key={value} type="button" onClick={() => onCorrect(start, end, value)}>
               Confirmar {value.charAt(0).toUpperCase() + value.slice(1)}
