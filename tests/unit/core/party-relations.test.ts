@@ -8,6 +8,10 @@ describe("party role relations in the dictation", () => {
     ["María José de la Cruz, quien actuaría como la arrendataria", "arrendatario", "María José de la Cruz"],
     ["la arrendataria se llama Ana Gómez", "arrendatario", "Ana Gómez"],
     ["el vecino juan quien sería el arrendador", "arrendador", "juan"],
+    ["la vecina maría de la cruz quien sería la arrendataria", "arrendatario", "maría de la cruz"],
+    ["Como arrendador, Juan de la Cruz", "arrendador", "Juan de la Cruz"],
+    ["nombre del arrendatario Óscar León", "arrendatario", "Óscar León"],
+    ["Yo, Juan Gómez, sería el arrendador", "arrendador", "Juan Gómez"],
   ] as const)("recognizes %s", (input, role, name) => {
     const result = runPipeline(input);
     expect(result.fields[role]).toBe(name);

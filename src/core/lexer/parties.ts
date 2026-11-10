@@ -23,6 +23,7 @@ function startsClause(tokens: Token[], index: number): boolean {
   return current?.type === "COMA" || current?.type === "NUM" || current?.type === "VERBO" ||
     first === "y" || first === "e" || ROLES.includes(first) || CLAUSE_WORDS.includes(first) ||
     (ROLE_WORDS.includes(first) && second === "nombre") ||
+    (first === "nombre" && second === "del" && ROLE_WORDS.includes(word(tokens[index + 2]))) ||
     (ARTICLES.includes(first) && (ROLE_WORDS.includes(second) || LOT_WORDS.includes(second) ||
       second === "insumos" || next?.type === "NUM")) ||
     (first === "en" && ARTICLES.includes(second)) ||
@@ -74,14 +75,14 @@ function beforeRole(tokens: Token[], roleIndex: number) {
     cursor--;
   }
   if (!identity) return undefined;
-  if (relative && tokens[cursor]?.type === "COMA") cursor--;
+  if (tokens[cursor]?.type === "COMA" && (relative || proper(tokens[cursor - 1]))) cursor--;
 
   const end = cursor + 1;
   while (cursor >= 0 && (proper(tokens[cursor]) || PARTICLES.has(word(tokens[cursor])) ||
     ALTERNATIVES.has(word(tokens[cursor])))) cursor--;
   let start = cursor + 1;
   if (start === end && (relative || TITLES.has(word(tokens[cursor - 1])))) {
-    while (cursor >= 0 && tokens[cursor]?.type === "NOMBRE" &&
+    while (cursor >= 0 && (tokens[cursor]?.type === "NOMBRE" || PARTICLES.has(word(tokens[cursor]))) &&
         !TITLES.has(word(tokens[cursor])) && !tokens[cursor]?.partyName) cursor--;
     start = cursor + 1;
   }
@@ -110,30 +111,42 @@ export function groupPartyNames(tokens: Token[], text: string): { tokens: Token[
     warnings.push(`El nombre asociado a «${token.lexeme}» es ambiguo. Confirme el correcto en su casilla.`);
   for (let i = 0; i < tokens.length; i++) {
     const role = tokens[i]!;
-    const previous = word(tokens[i - (ARTICLES.includes(word(tokens[i - 1])) ? 2 : 1)]);
+    const previousIndex = i - (ARTICLES.includes(word(tokens[i - 1])) ? 2 : 1);
+    const previous = word(tokens[previousIndex]);
+    const suppliedBy = previous === "del" && ["cuenta", "cargo"].includes(word(tokens[previousIndex - 1]));
     if (!ROLE_WORDS.includes(word(role)) || SUPPLIER_VERBS.includes(previous) ||
-        previous === "del" || SUPPLIER_VERBS.includes(word(tokens[i + 1]))) {
+        suppliedBy || SUPPLIER_VERBS.includes(word(tokens[i + 1]))) {
       grouped.push(role);
       continue;
     }
 
+    const after = tokens[i + 1]?.type === "COMA" ? i + 2 : i + 1;
+    const start = skipIntroduction(tokens, after);
+    let end = start;
+    while (end < tokens.length && !startsClause(tokens, end)) end++;
     const reverse = beforeRole(tokens, i);
     if (reverse) {
       const prior = tokens.slice(reverse.begin, i);
       if (prior.every((token, j) => grouped[grouped.length - prior.length + j] === token)) {
-        grouped.splice(grouped.length - prior.length, prior.length, role);
-        const name = reverse.negated ? undefined : nameToken(tokens, reverse.start, reverse.end, text);
-        if (name) grouped.push(name);
-        else review(role);
-        continue;
+        grouped.splice(grouped.length - prior.length, prior.length);
+        const hasBefore = reverse.start < reverse.end;
+        const hasAfter = after === i + 1 && start < end;
+        if (hasBefore || reverse.negated || start === end) {
+          grouped.push(role);
+          const name = reverse.negated || hasAfter ? undefined : nameToken(tokens, reverse.start, reverse.end, text);
+          if (name) grouped.push(name);
+          else review(role);
+          if (hasAfter) i = end - 1;
+          continue;
+        }
       }
+    } else if (previous === "del" && word(tokens[previousIndex - 1]) === "nombre" &&
+        grouped.at(-1) === tokens[previousIndex] && grouped.at(-2) === tokens[previousIndex - 1]) {
+      grouped.splice(-2, 2);
     }
 
     grouped.push(role);
-    const start = skipIntroduction(tokens, i + 1);
-    let end = start;
-    while (end < tokens.length && !startsClause(tokens, end)) end++;
-    let ambiguous = tokens.slice(i + 1, start).some((token) => word(token) === "no");
+    let ambiguous = tokens.slice(after, start).some((token) => word(token) === "no");
     if (start < end && ["y", "e"].includes(word(tokens[end])) && proper(tokens[end + 1]) &&
         !startsClause(tokens, end + 1)) {
       ambiguous = true;
@@ -142,7 +155,7 @@ export function groupPartyNames(tokens: Token[], text: string): { tokens: Token[
     }
     const name = ambiguous ? undefined : nameToken(tokens, start, end, text);
     if (name) grouped.push(name);
-    else if (start !== i + 1 || end > start) review(role);
+    else if (start !== after || end > start) review(role);
     i = end - 1;
   }
   return { tokens: grouped, warnings };
