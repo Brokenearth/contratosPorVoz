@@ -8,7 +8,7 @@ import type { InputSource } from "./voice";
 
 const LABELS: Record<string, string> = {
   lote: "Lote",
-  hectareas: "Hectáreas",
+  hectareas: "Área del lote",
   tipo_animal: "Tipo de animal",
   cantidad_animales: "Cantidad de animales",
   raza: "Raza",
@@ -27,14 +27,16 @@ interface Props {
   onAnswer: (answer: string) => void;
   onForce: () => void;
   onConfirmNames: (names: PartyNames) => void;
+  originalInput?: string;
+  onCorrect: (start: number, end: number, value: string) => void;
   source?: InputSource;
 }
 
-export function Conversation({ result, onAnswer, onForce, onConfirmNames, source }: Props) {
+export function Conversation({ result, onAnswer, onForce, onConfirmNames, originalInput, onCorrect, source }: Props) {
   const [answer, setAnswer] = useState("");
   const [listening, setListening] = useState(false);
-  const { template, missing, question, contract, errors } = result;
-  const complete = template !== null && missing.length === 0;
+  const { template, missing, question, contract, blocked, errors } = result;
+  const complete = contract !== null && missing.length === 0;
 
   function submit() {
     if (!answer.trim()) return;
@@ -63,11 +65,18 @@ export function Conversation({ result, onAnswer, onForce, onConfirmNames, source
               );
             })}
           </ul>
+          <details className="mt-2 text-sm">
+            <summary>Datos opcionales de esta plantilla</summary>
+            <p>{template.optional.filter((key) => key !== "animales_descripcion").map((key) => LABELS[key] ?? key).join(", ")}.</p>
+          </details>
         </>
       ) : null}
 
       {errors.length > 0 && (
-        <details className="mt-3 text-xs text-amber-800 dark:text-amber-300">
+        <details
+          className="mt-3 text-xs text-amber-800 dark:text-amber-300"
+          open={errors.some((error) => error.includes("Confirme el correcto en su casilla"))}
+        >
           <summary>{errors.length} aviso(s) del análisis</summary>
           <ul className="list-disc pl-5">
             {errors.map((e, i) => (
@@ -77,7 +86,23 @@ export function Conversation({ result, onAnswer, onForce, onConfirmNames, source
         </details>
       )}
 
-      <PartyReview names={result.fields} confirmed={result.confirmedNames !== undefined} onConfirm={onConfirmNames} />
+      {originalInput && (
+        <details className="mt-3">
+          <summary>Transcripción original</summary>
+          <p>{originalInput}</p>
+        </details>
+      )}
+      {result.suggestions.map(({ original, start, end, candidates }) => (
+        <div className="pending-note" key={start}>
+          <p>Revise la raza «{original}» antes de continuar.</p>
+          {candidates.map(({ value }) => (
+            <button className="btn-secondary" key={value} type="button" onClick={() => onCorrect(start, end, value)}>
+              Confirmar {value.charAt(0).toUpperCase() + value.slice(1)}
+            </button>
+          ))}
+        </div>
+      ))}
+      <PartyReview names={result.fields} confirmed={result.confirmedNames} onConfirm={onConfirmNames} />
 
       {complete ? (
         <p role="status" className="completion-note">
@@ -103,7 +128,7 @@ export function Conversation({ result, onAnswer, onForce, onConfirmNames, source
             <button type="button" className="btn-primary" onClick={submit} disabled={!answer.trim() || listening}>
               Responder
             </button>
-            {template && !contract && (
+            {template && !contract && !blocked && (
               <button type="button" className="btn-secondary" onClick={onForce} disabled={listening}>
                 Generar de todos modos
               </button>

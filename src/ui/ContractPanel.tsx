@@ -7,6 +7,7 @@ import { Panel } from "./Panel";
 interface Props {
   markdown: string;
   template: TemplateDef;
+  previous?: boolean;
 }
 export const contractFileName = (template: TemplateDef) => `contrato-${template.id.toLowerCase()}.md`;
 function download(markdown: string, name: string) {
@@ -20,7 +21,7 @@ function download(markdown: string, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function ContractPanel({ markdown, template }: Props) {
+export function ContractPanel({ markdown, template, previous = false }: Props) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const pending = (markdown.match(/\{\{[^}]+\}\}/g) ?? []).length;
@@ -37,10 +38,11 @@ export function ContractPanel({ markdown, template }: Props) {
   }
   return (
     <Panel
-      title="Contrato generado"
+      title={previous ? "Borrador anterior" : pending > 0 ? "Borrador incompleto" : "Contrato generado"}
       id="contrato"
       actions={<span className="status-tag">{template.id.toLowerCase()}</span>}
     >
+      {previous && <p className="pending-note">El último turno no generó un documento nuevo.</p>}
       <div className="document-actions">
         <button type="button" className="btn-primary" onClick={() => download(markdown, contractFileName(template))}>
           <Icon name="download" />

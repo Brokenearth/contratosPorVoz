@@ -10,14 +10,14 @@ export function PartyReview({
   onConfirm,
 }: {
   names: PartyNames;
-  confirmed: boolean;
+  confirmed?: PartyNames;
   onConfirm: (names: PartyNames) => void;
 }) {
   const [draft, setDraft] = useState(names);
   const [error, setError] = useState("");
 
   function submit() {
-    const reviewed: PartyNames = {};
+    const reviewed: PartyNames = { ...confirmed };
     for (const role of PARTY_ROLES) {
       const value = draft[role] ?? "";
       const name = normalizePartyName(value);
@@ -25,7 +25,7 @@ export function PartyReview({
         setError(`${LABELS[role]} debe contener un nombre con letras y signos propios de un nombre.`);
         return;
       }
-      reviewed[role] = name;
+      if (name || names[role] !== undefined) reviewed[role] = name;
     }
     onConfirm(reviewed);
   }

@@ -6,9 +6,9 @@ describe("selectTemplate", () => {
   it("chooses PASTOREO for the §5.4 example", () => {
     const result = selectTemplate(["lote", "hectareas", "tipo_animal", "cantidad_animales", "raza", "uso"], TEMPLATES);
     expect(result.templateId).toBe("PASTOREO");
-    expect(result.scores.PASTOREO?.matched).toBe(6);
-    expect(result.scores.CULTIVO?.matched).toBe(2);
-    expect(result.scores.MIXTA?.matched).toBe(6);
+    expect(result.scores.PASTOREO?.matched).toBe(3);
+    expect(result.scores.CULTIVO?.matched).toBe(1);
+    expect(result.scores.MIXTA?.matched).toBe(3);
     expect(result.tie).toBe(false);
     expect(result.low).toBe(false);
     expect(result.run.accepted).toBe(true);
@@ -16,7 +16,12 @@ describe("selectTemplate", () => {
 
   it("writes one unary tally per template on the tape", () => {
     const result = selectTemplate(["lote"], TEMPLATES);
-    expect(result.run.output).toContain("%PASTOREO 1 %CULTIVO 1 %MIXTA 1");
+    expect(result.run.output).toContain("%PASTOREO:5 1 %CULTIVO:4 1 %MIXTA:6 1");
+  });
+
+  it("writes the winning template and flags to the final tape", () => {
+    const result = selectTemplate(getTemplate("MIXTA").required, TEMPLATES);
+    expect(result.run.snapshots.at(-1)?.tape.at(-1)).toBe("RESULT:MIXTA:0:0");
   });
 
   it("flags a tie when two templates reach the same proportion", () => {
@@ -25,6 +30,21 @@ describe("selectTemplate", () => {
     const b = { ...getTemplate("CULTIVO"), id: "CULTIVO" as const, required: ["lote", "valor", "cultivo", "fecha"] };
     const result = selectTemplate(["lote", "valor"], [a, b]);
     expect(result.tie).toBe(true);
+  });
+
+  it("leaves an exact incomplete tie unresolved in either template order", () => {
+    const pastoreo = { ...getTemplate("PASTOREO"), required: ["lote", "uso"] };
+    const cultivo = { ...getTemplate("CULTIVO"), required: ["lote", "cultivo"] };
+    const results = [
+      selectTemplate(["lote"], [pastoreo, cultivo]),
+      selectTemplate(["lote"], [cultivo, pastoreo]),
+    ];
+
+    expect(results.map((result) => result.templateId)).toEqual([null, null]);
+    for (const result of results) {
+      expect(result).toMatchObject({ tie: true, low: false });
+      expect(result.run.snapshots.at(-1)?.tape.at(-1)).toBe("RESULT:-:1:0");
+    }
   });
 
   it("prefers the template covering more fields when both are complete (no tie)", () => {
@@ -36,7 +56,7 @@ describe("selectTemplate", () => {
   it("chooses CULTIVO for a crop dictation", () => {
     const result = selectTemplate(["lote", "hectareas", "cultivo", "insumos", "fecha", "duracion", "valor"], TEMPLATES);
     expect(result.templateId).toBe("CULTIVO");
-    expect(result.scores.CULTIVO).toEqual({ matched: 7, total: 7 });
+    expect(result.scores.CULTIVO).toEqual({ matched: 4, total: 4 });
   });
 
   it("flags a low match when the best proportion is under 50 %", () => {

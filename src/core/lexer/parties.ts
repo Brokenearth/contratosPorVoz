@@ -9,8 +9,9 @@ export const PARTY_ALIASES = {
 const ROLES = ["arrendador", "arrendadora", "arrendatario", "arrendataria"];
 const ROLE_WORDS = [...ROLES, ...Object.values(PARTY_ALIASES).flat()];
 const ARTICLES = ["el", "la", "los", "las"];
-const SUPPLIER_VERBS = ["aporta", "aportan", "pone", "suministra"];
-const CLAUSE_WORDS = ["lote", "valor", "desde", "durante", "fin"];
+const SUPPLIER_VERBS = ["aporta", "aportan", "pone", "suministra", "corre"];
+const LOT_WORDS = ["lote", "finca", "parcela", "hacienda", "predio"];
+const CLAUSE_WORDS = ["lote", "valor", "desde", "durante", "fin", "destinado", "destinada"];
 const word = (token: Token | undefined) => normalize(token?.lexeme ?? "");
 
 function startsClause(tokens: Token[], index: number): boolean {
@@ -21,13 +22,14 @@ function startsClause(tokens: Token[], index: number): boolean {
   return current?.type === "COMA" || current?.type === "NUM" || current?.type === "VERBO" ||
     first === "y" || first === "e" || ROLES.includes(first) || CLAUSE_WORDS.includes(first) ||
     (ROLE_WORDS.includes(first) && second === "nombre") ||
-    (ARTICLES.includes(first) && (ROLE_WORDS.includes(second) || second === "lote" ||
+    (ARTICLES.includes(first) && (ROLE_WORDS.includes(second) || LOT_WORDS.includes(second) ||
       second === "insumos" || next?.type === "NUM")) ||
     (first === "en" && ARTICLES.includes(second)) ||
     (first === "a" && second === "partir") ||
-    (first === "se" && next?.type === "VERBO") ||
+    (first === "se" && (next?.type === "VERBO" || ["da", "entrega", "renta"].includes(second))) ||
+    (["doy", "entrego"].includes(first) && second === "en") ||
     (first === "por" && (next?.type === "NUM" || ["un", "una", "la", "el"].includes(second))) ||
-    (first === "para" && ["NUM", "ANIMAL", "USO", "CULTIVO"].includes(next?.type ?? ""));
+    (first === "para" && (["NUM", "ANIMAL", "USO", "CULTIVO"].includes(next?.type ?? "") || second === "sembrar"));
 }
 
 // AFD tokens supply boundaries. The name itself keeps the original spelling and span.

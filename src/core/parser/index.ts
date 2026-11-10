@@ -16,7 +16,8 @@ export interface ParseOutcome extends ParseResult {
 /** Parses `tokens` starting from any nonterminal (e.g. "LISTA" to show the §5.2 AST). */
 export function parseFrom(start: string, tokens: Token[]): ParseOutcome {
   const run = runPda(start, tokens);
-  return { ...run, fields: extractFields(run.tree) };
+  const fields = extractFields(run.tree, run.warnings);
+  return { ...run, fields };
 }
 
 /** Parses a whole dictated contract (CONTRATO → CLAUSULA CONTRATO | λ). */

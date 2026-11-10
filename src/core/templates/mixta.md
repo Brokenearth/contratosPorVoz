@@ -1,27 +1,29 @@
 ---
 id: MIXTA
 titulo: Contrato de arrendamiento mixto de lote (pastoreo y cultivo)
-requeridos: lote, hectareas, tipo_animal, cantidad_animales, raza, fecha, uso, cultivo, insumos, duracion, valor
-opcionales: arrendador, arrendatario, animales_descripcion
+requeridos: lote, tipo_animal, fecha, uso, cultivo, valor
+opcionales: hectareas, cantidad_animales, raza, insumos, duracion, arrendador, arrendatario, animales_descripcion
 ---
 
 # CONTRATO DE ARRENDAMIENTO MIXTO DE LOTE (PASTOREO Y CULTIVO)
 
-## Partes
+[[?estado_borrador]]> Borrador incompleto. Pendientes: {{estado_borrador}}
+
+[[/estado_borrador]]## Partes
 
 Entre los suscritos, {{arrendador}}, mayor de edad, quien en adelante se denominará el ARRENDADOR, y {{arrendatario}}, mayor de edad, quien en adelante se denominará el ARRENDATARIO, se celebra el presente contrato de arrendamiento mixto de lote rural, para pastoreo y cultivo, que se regirá por las siguientes cláusulas.
 
 ## Objeto
 
-CLÁUSULA PRIMERA. El ARRENDADOR entrega a título de arrendamiento al ARRENDATARIO el lote {{lote}}, con una extensión de {{hectareas}}, para que sea utilizado en el pastoreo de animales y en actividades agrícolas, en las condiciones de este contrato.
+CLÁUSULA PRIMERA. El ARRENDADOR entrega a título de arrendamiento al ARRENDATARIO el lote {{lote}}[[?hectareas]], con una extensión de {{hectareas}}[[/hectareas]], para que sea utilizado en el pastoreo de animales y en actividades agrícolas, en las condiciones de este contrato.
 
 ## Destinación
 
-CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote {{lote}} ({{hectareas}}) un máximo de {{cantidad_animales}} {{tipo_animal}} de raza {{raza}}, {{destinados}} exclusivamente a la {{uso}}, durante {{duracion}}.[[?animales_descripcion]] Los animales autorizados son: {{animales_descripcion}}.[[/animales_descripcion]] En la parte del lote no destinada al pastoreo podrá establecer el cultivo de {{cultivo}}, y las partes acordarán por escrito la división de las áreas. Los insumos necesarios para el cultivo (semillas, abonos, fertilizantes y demás) serán aportados por {{insumos}}.
+CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote {{lote}}[[?hectareas]] ({{hectareas}})[[/hectareas]] [[?cantidad_animales]]un máximo de {{cantidad_animales}} [[/cantidad_animales]]{{tipo_animal}}[[?raza]] de raza {{raza}}[[/raza]], {{destinados}} exclusivamente a la {{uso}}[[?duracion]], durante {{duracion}}[[/duracion]].[[?animales_descripcion]] Los animales autorizados son: {{animales_descripcion}}.[[/animales_descripcion]] En la parte del lote no destinada al pastoreo podrá establecer el cultivo de {{cultivo}}, y las partes acordarán por escrito la división de las áreas.[[?insumos]] Los insumos necesarios para el cultivo (semillas, abonos, fertilizantes y demás) serán aportados por {{insumos}}.[[/insumos]]
 
 ## Duración
 
-CLÁUSULA TERCERA. El término de duración del presente contrato es de {{duracion}}[[?fecha]], contados a partir del {{fecha}}[[/fecha]]. Si al vencimiento hay una cosecha pendiente, el ARRENDATARIO podrá recogerla dentro de los treinta (30) días siguientes, o el contrato podrá prorrogarse por acuerdo escrito entre las partes.
+CLÁUSULA TERCERA. El arrendamiento comienza el {{fecha}}.[[?duracion]] Tiene una duración de {{duracion}}. Si al vencimiento hay una cosecha pendiente, el ARRENDATARIO podrá recogerla dentro de los treinta (30) días siguientes, o el contrato podrá prorrogarse por acuerdo escrito entre las partes.[[/duracion]]
 
 ## Precio y forma de pago
 
@@ -33,11 +35,11 @@ CLÁUSULA QUINTA. Son obligaciones del ARRENDADOR: a) entregar el lote en buen e
 
 ## Obligaciones del ARRENDATARIO
 
-CLÁUSULA SEXTA. Son obligaciones del ARRENDATARIO: a) pagar el canon en la forma y fechas pactadas; b) no exceder la cantidad de animales autorizada y mantenerlos separados del área cultivada; c) mantener los animales vacunados y al día con los registros sanitarios exigidos por la autoridad competente; d) usar buenas prácticas agrícolas y manejar los agroquímicos según la normativa vigente; e) no subarrendar ni ceder el contrato sin autorización escrita; f) restituir el lote al terminar el contrato en el estado en que lo recibió, salvo el deterioro normal por el uso.
+CLÁUSULA SEXTA. Son obligaciones del ARRENDATARIO: a) pagar el canon en la forma y fechas pactadas; b) [[?cantidad_animales]]no exceder la cantidad de animales autorizada y [[/cantidad_animales]]mantener los animales separados del área cultivada; c) mantener los animales vacunados y al día con los registros sanitarios exigidos por la autoridad competente; d) usar buenas prácticas agrícolas y manejar los agroquímicos según la normativa vigente; e) no subarrendar ni ceder el contrato sin autorización escrita; f) restituir el lote al terminar el contrato en el estado en que lo recibió, salvo el deterioro normal por el uso.
 
 ## Terminación
 
-CLÁUSULA SÉPTIMA. El contrato terminará: a) por el vencimiento del término pactado; b) por mutuo acuerdo entre las partes; c) por el incumplimiento de cualquiera de las obligaciones aquí pactadas, en especial la falta de pago del canon, el exceso de animales o el cambio de cultivo sin autorización, caso en el cual la parte cumplida podrá darlo por terminado mediante aviso escrito con quince (15) días de anticipación.
+CLÁUSULA SÉPTIMA. El contrato terminará: a) por el vencimiento del término pactado; b) por mutuo acuerdo entre las partes; c) por el incumplimiento de cualquiera de las obligaciones aquí pactadas, en especial la falta de pago del canon[[?cantidad_animales]], el exceso de animales[[/cantidad_animales]] o el cambio de cultivo sin autorización, caso en el cual la parte cumplida podrá darlo por terminado mediante aviso escrito con quince (15) días de anticipación.
 
 ## Resolución de conflictos
 

@@ -37,7 +37,10 @@ export function toValueMap(fields: ContractFields): ValueMap {
   // "destinados" is grammar, not data: it always has a value so it never stays pending.
   const values: ValueMap = { destinados: "destinados" };
   if (fields.lote) values.lote = fields.lote;
-  if (fields.hectareas !== undefined) values.hectareas = plural(fields.hectareas, "hectárea", "hectáreas");
+  if (fields.areaLocal) {
+    const { cantidad, unidad } = fields.areaLocal;
+    values.hectareas = plural(cantidad, unidad, `${unidad}s`);
+  } else if (fields.hectareas !== undefined) values.hectareas = plural(fields.hectareas, "hectárea", "hectáreas");
   if (fields.animales && fields.animales.length > 0) Object.assign(values, animalValues(fields.animales));
   if (fields.uso) values.uso = formatUse(fields.uso);
   if (fields.cultivo) values.cultivo = fields.cultivo.toLowerCase();
@@ -73,6 +76,7 @@ export function formatDuration(amount: number, unit: string): string {
   if (u.startsWith("a")) return plural(amount, "año", "años");
   if (u.startsWith("d")) return plural(amount, "día", "días");
   if (u.startsWith("semana")) return plural(amount, "semana", "semanas");
+  if (u.startsWith("quincena")) return plural(amount, "quincena", "quincenas");
   return `${amount} ${u}`;
 }
 
@@ -118,11 +122,12 @@ function sumAmounts(items: AnimalItem[]): number | null {
 
 function animalName(animal: string, amount: number): string {
   const base = singular(animal.toLowerCase());
-  return amount === 1 ? base : `${base}s`;
+  return amount === 1 ? base : base === "res" || base === "buey" ? `${base}es` : `${base}s`;
 }
 
 function singular(word: string): string {
-  return word.endsWith("s") ? word.slice(0, -1) : word;
+  if (word === "reses" || word === "bueyes") return word.slice(0, -2);
+  return word !== "res" && word.endsWith("s") ? word.slice(0, -1) : word;
 }
 
 function formatUse(use: string): string {
@@ -167,6 +172,7 @@ function joinSpanish(list: string[]): string {
 const BLANK_NAME = "____________________";
 
 /** Values for the fill machine: the extracted data plus blank lines for unnamed parties. */
-export function contractValues(fields: ContractFields): ValueMap {
-  return { arrendador: BLANK_NAME, arrendatario: BLANK_NAME, ...toValueMap(fields) };
+export function contractValues(fields: ContractFields, pending = ""): ValueMap {
+  const values = { arrendador: BLANK_NAME, arrendatario: BLANK_NAME, ...toValueMap(fields) };
+  return pending ? { ...values, estado_borrador: pending } : values;
 }

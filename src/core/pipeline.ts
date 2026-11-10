@@ -1,5 +1,6 @@
-import { mergeFields, missingFields, questionFor } from "./dialog";
+import { mergeFields, missingFields, questionFor, validateFields } from "./dialog";
 import { tokenize } from "./lexer";
+import { suggestBreedCorrections, type TranscriptionSuggestion } from "./lexer/similarity";
 import { parseContract, type ParseOutcome } from "./parser";
 import { normalizePartyName, PARTY_ROLES } from "./partyNames";
 import { contractValues, extractedFieldNames, getTemplate, TEMPLATES } from "./templates";
@@ -26,6 +27,9 @@ export interface PipelineResult {
   question: string;
   /** Fill-machine run; null until the required fields are complete (or `force`). */
   contract: TuringRun | null;
+  fill: TuringRun | null;
+  blocked: boolean;
+  suggestions: TranscriptionSuggestion[];
   /** Lexical and syntax errors, plus words skipped by the parser's error recovery, as readable messages. */
   errors: string[];
 }
@@ -44,7 +48,8 @@ export function runPipeline(
 ): PipelineResult {
   const lex = tokenize(text);
   const parse = parseContract(lex.tokens);
-  const fields = mergeFields(previousFields, parse.fields);
+  const canMerge = parse.ok && lex.errors.length === 0;
+  const fields = mergeFields(previousFields, canMerge ? parse.fields : {});
   const partyWarnings: string[] = [];
   const confirmedNames = options.confirmedNames;
   for (const role of PARTY_ROLES) {
@@ -56,19 +61,25 @@ export function runPipeline(
     }
     fields[role] = confirmed;
   }
-  const selection = selectTemplate(extractedFieldNames(fields), TEMPLATES);
+  const selection = selectTemplate(extractedFieldNames(fields), TEMPLATES, { requireDomain: true });
   const template = selection.templateId === null ? null : getTemplate(selection.templateId);
   const missing = template ? missingFields(fields, template.required) : [];
-  const question = template ? questionFor(missing) : NO_TEMPLATE_QUESTION;
-  const ready = template !== null && (missing.length === 0 || options.force === true);
-  const contract = ready ? fillTemplate(template.body, contractValues(fields)).run : null;
-  const errors = [
-    ...lex.errors.map((e) => `${e.message} en la posición ${e.position}.`),
+  const missingQuestion = questionFor(missing);
+  const failures = [
+    ...lex.errors.map((error) => `${error.message} en la posición ${error.position}.`),
     ...parse.errors,
-    ...parse.warnings,
-    ...partyWarnings,
+    ...validateFields(fields),
   ];
-  return { lex, parse, fields, confirmedNames, selection, template, missing, question, contract, errors };
+  const ready = template !== null && failures.length === 0 && (missing.length === 0 || options.force === true);
+  const pending = missingQuestion.replace(/^Falta /, "");
+  const fill = ready ? fillTemplate(template.body, contractValues(fields, pending)).run : null;
+  if (fill && !fill.accepted) failures.push(`No se completó el llenado. ${fill.snapshots.at(-1)?.note ?? ""}`);
+  const blocked = failures.length > 0;
+  const contract = fill?.accepted ? fill : null;
+  const question = failures[0] ?? (template ? missingQuestion : NO_TEMPLATE_QUESTION);
+  const errors = [...failures, ...parse.warnings, ...partyWarnings];
+  const suggestions = parse.ok ? [] : suggestBreedCorrections(lex.tokens);
+  return { lex, parse, fields, confirmedNames, selection, template, missing, question, contract, fill, blocked, errors, suggestions };
 }
 
 /** Example dictations for the UI, covering the three templates. */

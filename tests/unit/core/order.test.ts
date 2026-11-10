@@ -38,7 +38,7 @@ const CASES: { id: string; name: string; clauses: string[] }[] = [
     name: "pastoreo con sinónimos",
     clauses: ["se arrienda", "por un período de 12 meses", "a partir del 15 de noviembre de 2026",
       "el lote denominado La Esperanza, con una extensión de 5 hectáreas",
-      "destinado al mantenimiento de 20 reses de raza Holstein", "para producción de leche",
+      "destinado al mantenimiento de 20 vacas de raza Holstein Friesian", "para producción de leche",
       "por la suma de $6.000.000 de pesos"],
   },
   {
@@ -71,6 +71,22 @@ const CASES: { id: string; name: string; clauses: string[] }[] = [
 ];
 
 describe("clauses in any order (§5.5) with plain words and synonyms", () => {
+  it.each(CASES.filter(({ name }) => !name.includes("sinónimos")))(
+    "$name: names can be interleaved with or without an initial verb",
+    ({ id, clauses }) => {
+      const [verb, lot, ...rest] = clauses;
+      const parties = ["arrendador nombre Juan de la Cruz", "arrendataria nombre Ana Gómez"];
+      const first = runPipeline([verb, lot, parties[0], ...rest, parties[1]].join(", "));
+      const second = runPipeline([parties[1], ...rest.reverse(), parties[0], lot].join(" "));
+      expect(first.errors).toEqual([]);
+      expect(second.errors).toEqual([]);
+      expect(second.template?.id).toBe(id);
+      expect(second.fields).toEqual(first.fields);
+      expect(second.missing).toEqual([]);
+      expect(second.contract?.output).toBe(first.contract?.output);
+    },
+  );
+
   it.each(CASES)("$name: every sampled order gives the same template and fields", ({ id, clauses }) => {
     const reference = runPipeline(clauses.join(" "));
     expect(reference.template?.id).toBe(id);
@@ -82,6 +98,8 @@ describe("clauses in any order (§5.5) with plain words and synonyms", () => {
         expect(result.errors, order.join(joiner)).toEqual([]);
         expect(result.template?.id).toBe(id);
         expect(canon(result.fields)).toBe(canon(reference.fields));
+        expect(result.missing).toEqual(reference.missing);
+        expect(result.contract?.output).toBe(reference.contract?.output);
       }
     }
   });
@@ -123,7 +141,7 @@ describe("synonym dictionary", () => {
 
   it("chains rewrites and drops filler words", () => {
     const lexemes = tokenize("la finca denominada El Roble con aproximadamente 20 reses").tokens.map((t) => t.lexeme);
-    expect(lexemes).toEqual(["el", "lote", "El", "Roble", "con", "20", "vacas"]);
+    expect(lexemes).toEqual(["el", "lote", "El", "Roble", "con", "20", "reses"]);
   });
 
   it("skips the $ sign before an amount", () => {

@@ -9,7 +9,7 @@ export interface LexResult { tokens: Token[]; trace: LexStep[]; errors: { positi
 export interface AnimalItem { cantidad?: number; animal: string; raza?: string; sub?: AnimalItem[] }
 export type PartyNames = Pick<ContractFields, "arrendador" | "arrendatario">;
 export interface ContractFields {
-  animales?: AnimalItem[]; lote?: string; hectareas?: number;
+  animales?: AnimalItem[]; lote?: string; hectareas?: number; areaLocal?: { cantidad: number; unidad: "fanegada" | "cuadra" };
   fecha?: { dia: number; mes: number; anio?: number };
   valor?: { monto: number; moneda: string }; duracion?: { cantidad: number; unidad: string };
   uso?: string; cultivo?: string; insumos?: string; arrendador?: string; arrendatario?: string;
