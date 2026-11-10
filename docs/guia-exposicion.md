@@ -1,239 +1,129 @@
-# Guía para el adelanto: de la propuesta al código
+# Guía para la exposición · Del dictado al contrato
 
-## Qué se puede afirmar sobre el avance
+El proyecto transforma una descripción de arrendamiento rural en un borrador Markdown. El navegador transcribe la voz y el texto queda editable. A partir del texto, el núcleo ejecuta sus propios autómatas y máquinas, y la interfaz muestra las trazas de esa ejecución. Los datos de esta guía son ficticios.
 
-La arquitectura y los temas principales de la propuesta están implementados: entrada por voz o
-texto, análisis léxico con ER/AFN/AFD, gramática, análisis con pila, extracción de campos,
-selección de plantilla y generación del contrato. Hay tres plantillas y vistas de las trazas.
+## Recorrido principal
 
-El cumplimiento no es total en el sentido formal de la propuesta. La máquina de selección compara
-y cuenta coincidencias, pero la elección de la ganadora la hace TypeScript. Además, las máquinas
-usan estados parametrizados y símbolos compuestos que necesitan una formalización adicional para
-presentarlas como máquinas de Turing clásicas con conjuntos finitos y fijos de estados y símbolos.
+### 1. Voz y texto intercambiables
 
-El contraste se hizo contra la propuesta adjunta, especialmente sus secciones 4, 5 y 6.
-Esto permite justificar los temas que ella enumera; el nivel de formalización exigido en la
-asignatura deberá contrastarse con lo que pida el docente.
+**Archivo y función.** [src/ui/voice.ts](../src/ui/voice.ts), `startListening` y `speechInput`. [src/ui/App.tsx](../src/ui/App.tsx), `analyze`.
 
-## Dónde abrir el código
+~~~ts
+recognition.lang = SPEECH_LANG;
+recognition.interimResults = true;
+recognition.continuous = true;
+~~~
 
-Los comentarios que comienzan con `Materia` indican los puntos de la explicación.
+El adaptador usa `es-CO` y entrega resultados parciales y finales a `DictationField`. Tras siete segundos de silencio termina la escucha. Si se escribe «lote 20», o se dicta y se obtiene el mismo texto, al pulsar **Analizar** el punto de entrada es `runPipeline`. Las pruebas `tests/unit/ui/voice.test.ts` y `tests/e2e/contracts.spec.ts` simulan `SpeechRecognition`. Para comprobar micrófono real se requiere una ejecución aparte en Chrome o Edge con permiso, conexión y registro de la transcripción que produjo el navegador.
 
-| Tema | Archivo y función para mostrar |
+### 2. ER, AFN-λ de Thompson y AFD por subconjuntos
+
+**Archivo y función.** [src/core/lexer/definitions.ts](../src/core/lexer/definitions.ts), `NAMED_DEFINITIONS` y `TOKEN_DEFINITIONS`. [src/core/regex/index.ts](../src/core/regex/index.ts), `compileRegex`. [src/core/lexer/lexer.ts](../src/core/lexer/lexer.ts), `tokenAutomata` y `bestMatch`.
+
+~~~ts
+const { nfa, dfa } = compileRegex(definition.regex, NAMED_DEFINITIONS);
+return { definition, regex: definition.regex, nfa, dfa };
+~~~
+
+`parseRegex` convierte la ER en un árbol, `thompson` arma el AFN con transiciones λ y `subsetConstruction` construye estados que representan conjuntos del AFN. `bestMatch` ejecuta los AFD, conserva la coincidencia más larga y desempata por prioridad de definición. `20` da `NUM(20)` y `vacas` da `ANIMAL(vaca)`. En la vista del AFD de ANIMAL, `vacasx` rechaza al leer `x`. En el tokenizador completo puede pertenecer a la categoría `NOMBRE`. Las pruebas de `regex.test.ts` y `lexer.test.ts` comprueban ambas etapas.
+
+Las equivalencias exactas se aplican a tokens en `applySynonyms`, de la frase más larga a la más corta. La forma canónica vuelve a pasar por los AFD y conserva el tramo original en `synonymOf`. La traza del escaneo corresponde a la entrada original.
+
+### 3. Gramática, pila y árbol de derivación
+
+**Archivo y función.** [src/core/parser/grammar.ts](../src/core/parser/grammar.ts), `grammar`. [src/core/parser/predict.ts](../src/core/parser/predict.ts), `predict`. [src/core/parser/pda.ts](../src/core/parser/pda.ts), `runPda`.
+
+~~~text
+CONTRATO → CLAUSULA CONTRATO | λ
+SUBOPT   → "de" "los" "cuales" LISTA "fin" | λ
+PARTES   → ART ROL ROLTAIL
+~~~
+
+Al expandir una producción, `runPda` apila su cuerpo en orden inverso y compara los terminales con la entrada. `predict` usa una tabla manual con uno o dos tokens de anticipación. Por ejemplo, «por» seguido de número abre duración y «por un» abre valor. El árbol se construye con las producciones usadas. En la traza, `symbols` muestra la pila de reconocimiento y `stack` registra `Z0/SUB` como comprobación de anidamiento.
+
+Para `20 vacas de los cuales 5 terneras de los cuales 2 terneras fin fin y 3 caballos`, la pila de símbolos tiene dos cierres `fin` pendientes en el punto más profundo. Los marcadores recorren `Z0 → Z0 SUB → Z0 SUB SUB → Z0 SUB → Z0`. Al cerrar ambos grupos, los caballos quedan en la lista principal. `pipeline.test.ts` comprueba la lista anidada, la lista hermana y su Markdown.
+
+### 4. Extracción y revisión de partes
+
+**Archivo y función.** [src/core/lexer/parties.ts](../src/core/lexer/parties.ts), `groupPartyNames`. [src/core/parser/fields.ts](../src/core/parser/fields.ts), `extractFields`. [src/ui/PartyReview.tsx](../src/ui/PartyReview.tsx), `PartyReview`.
+
+~~~ts
+const name = text.slice(start.start, last.end);
+grouped.push({ type: "NOMBRE", lexeme: name, value: name, start: start.start, end: last.end, partyName: true });
+~~~
+
+La agrupación contextual conserva el texto de un nombre ya escaneado por los AFD. La producción de partes consume el rol y el marcador `nombre` por separado. `extractFields` lee el `NOMBRE` desde el árbol. «Arrendador nombre Juan de la Cruz» guarda `Juan de la Cruz`. «Arrendataria nombre Ana Gómez» guarda `Ana Gómez`. «Arrendador Luis Toro» conserva `Toro` dentro del nombre. «El arrendador aporta los insumos» registra el proveedor. Si se dictan dos nombres diferentes para el mismo rol, el análisis pide revisión y deja libre la casilla.
+
+| Estrategia | Uso en la exposición |
 | --- | --- |
-| Recorrido general | [src/core/pipeline.ts:37](../src/core/pipeline.ts#L37) |
-| Expresiones regulares | [src/core/lexer/definitions.ts:20](../src/core/lexer/definitions.ts#L20) |
-| Árbol de una ER | [src/core/regex/parser.ts:67](../src/core/regex/parser.ts#L67) |
-| AFN de Thompson | [src/core/regex/nfa.ts:35](../src/core/regex/nfa.ts#L35) |
-| Conversión AFN → AFD | [src/core/regex/dfa.ts:12](../src/core/regex/dfa.ts#L12) |
-| Reconocimiento de tokens | [src/core/lexer/lexer.ts:45](../src/core/lexer/lexer.ts#L45) |
-| Gramática libre de contexto | [src/core/parser/grammar.ts:30](../src/core/parser/grammar.ts#L30) |
-| Anticipación de tokens | [src/core/parser/predict.ts:39](../src/core/parser/predict.ts#L39) |
-| Autómata a pila | [src/core/parser/pda.ts:46](../src/core/parser/pda.ts#L46) |
-| Extracción semántica | [src/core/parser/fields.ts:142](../src/core/parser/fields.ts#L142) |
-| Motor de Turing | [src/core/turing/machine.ts:49](../src/core/turing/machine.ts#L49) |
-| Comparación y selección | [src/core/turing/selection.ts:86](../src/core/turing/selection.ts#L86) |
-| Llenado de plantilla | [src/core/turing/fill.ts:50](../src/core/turing/fill.ts#L50) |
-| Diálogo por faltantes | [src/core/dialog.ts:104](../src/core/dialog.ts#L104) |
-| Adaptador de voz | [src/ui/voice.ts:63](../src/ui/voice.ts#L63) |
+| Dictado con rol y `nombre` | Vía directa para capturar ambas partes y delimitar el nombre. Se conserva el formato «arrendador Juan Pérez» |
+| Pregunta independiente por rol | Da contexto a una respuesta aislada. Es una alternativa de diálogo que exigiría un turno adicional por nombre |
+| Casillas Arrendador y Arrendatario | Respaldo implementado para revisar, corregir o completar. La validación de nombres se comparte con la extracción. Una confirmación prevalece ante otro valor detectado en el mismo contrato |
 
-## Recorrido para explicar el proyecto
+La prueba de navegador corrige los nombres en las casillas y verifica los valores en Partes y Firmas del `.md`. Para una delimitación dudosa, usar una coma antes de la cláusula siguiente o confirmar el nombre en su casilla.
 
-### 1. Empezar por `runPipeline`
+### 5. Selección en cinta
 
-Esta función permite mostrar el recorrido completo sin entrar primero en React:
+**Archivo y función.** [src/core/turing/selection.ts](../src/core/turing/selection.ts), `selectionTape`, `selectionMachine` y `selectTemplate`.
 
-```ts
-const lex = tokenize(text);
-const parse = parseContract(lex.tokens);
-const fields = mergeFields(previousFields, parse.fields);
-const selection = selectTemplate(extractedFieldNames(fields), TEMPLATES);
-```
+~~~ts
+if (symbol === BLANK) return go("q_fin", verdict(tallies, domain), "S");
+readTallyCell(tallies, symbol);
+~~~
 
-Después se comprueban los campos requeridos y se llama a `fillTemplate` cuando corresponde.
-La voz ya se convirtió a texto antes de ejecutar esta función.
+La cinta contiene los campos detectados y los marcadores requeridos de las tres plantillas. `q_comparar` contrasta cada marcador con los campos de entrada. `q_contar` escribe conteos unarios. En el flujo de la aplicación, `q_dominio` lee si hay tipo animal, cultivo o ambos. `q_resultado` lee los conteos y escribe `RESULT:<plantilla>:<empate>:<baja>`. La comparación proporcional usa productos cruzados. Sin evidencia de destino la cinta termina en `RESULT:-:0:1` y el diálogo pide animales o cultivo. Con ambos dominios el resultado apunta a MIXTA, incluso si faltan campos. En las pruebas de comparación general, un empate pendiente queda sin plantilla al invertir el orden. `selectTemplate` decodifica la celda final y `runPipeline` obtiene esa plantilla.
 
-Puedes decir: «El proyecto trabaja sobre una descripción de un arriendo. Cada etapa recibe una
-representación y produce la que necesita la siguiente: texto, tokens, árbol, campos y documento».
+### 6. Diálogo, llenado y descarga
 
-### 2. Expresiones regulares, AFN y AFD
+**Archivo y función.** [src/core/pipeline.ts](../src/core/pipeline.ts), `runPipeline`. [src/core/turing/machine.ts](../src/core/turing/machine.ts), `runMachine`. [src/core/turing/fill.ts](../src/core/turing/fill.ts), `fillMachine`. [src/ui/ContractPanel.tsx](../src/ui/ContractPanel.tsx), `download`.
 
-En `lexer/definitions.ts`, `NAMED_DEFINITIONS` define `DIGITO` y `NUM = DIGITO DIGITO*`.
-La primera aparición de DIGITO es obligatoria; la estrella permite cero o más dígitos adicionales.
-La definición de ANIMAL se construye con alternativas de palabras y terminaciones opcionales.
-`λ` representa la cadena vacía, por ejemplo para admitir el singular sin agregar una «s».
-
-En `regex/parser.ts`, `parseRegex` convierte la expresión en un árbol con nodos `char`, `concat`,
-`union`, `star`, etc. En `regex/nfa.ts`, `thompson` transforma ese árbol en fragmentos de AFN unidos
-por transiciones λ. La unión abre caminos alternativos; la concatenación enlaza fragmentos;
-la estrella añade el ciclo y el camino que permite cero repeticiones.
-
-En `regex/dfa.ts`, `subsetConstruction` construye estados que representan conjuntos del AFN.
-`lambdaClosure` encuentra los estados alcanzables sin consumir entrada y `move` sigue un símbolo.
-Un conjunto es final si contiene un estado final del AFN. `compileRegex`, en `regex/index.ts`,
-conecta esas tres operaciones.
-
-Finalmente, `lexer/lexer.ts` usa `longestMatch` sobre los AFD para encontrar el token más largo.
-Si dos definiciones empatan, gana la que aparece antes. Se conserva el lexema original, su tipo,
-su valor y la posición. Los sinónimos se normalizan después mediante un diccionario.
-
-**Demostración:** en la pestaña del AFD, elige ANIMAL y prueba `vacas`. Recorre las letras y observa
-la aceptación. Cambia la cadena por `vacasx`: no hay transición para la «x» y se rechaza.
-Este es el reconocimiento del token ANIMAL; en el analizador completo otra palabra podría
-clasificarse como NOMBRE. No son la misma prueba.
-
-El AFD almacena solamente las transiciones existentes. Una transición ausente representa rechazo;
-si se exige una función de transición total, debe hacerse explícito el estado sumidero.
-
-### 3. Gramática libre de contexto y pila
-
-En `parser/grammar.ts`, cada producción tiene un no terminal a la izquierda y una secuencia de
-símbolos a la derecha. La regla `CONTRATO → CLAUSULA CONTRATO | λ` permite una sucesión de cláusulas.
-Por eso puede aparecer primero el lote, la duración o los animales, dentro de las formas admitidas.
-
-La recursión importante está en `ITEM`, `SUBOPT` y `LISTA`:
-
-```text
-ITEM   → num animal RAZAOPT SUBOPT | animal RAZAOPT SUBOPT
-SUBOPT → "de" "los" "cuales" LISTA "fin" | λ
-LISTA  → ITEM RESTO
-```
-
-Una lista puede contener un ítem con otra lista. Para cerrar un grupo anidado hace falta recordar
-qué quedó pendiente. Esa memoria la proporciona la pila.
-
-En `parser/pda.ts`, `runPda` retira un símbolo con `stack.pop()`. Si es no terminal, busca una
-producción y apila su cuerpo al revés, para que el primer símbolo quede en el tope y se procese
-antes. Si es terminal, lo compara con el siguiente token y avanza en la entrada. El árbol se
-construye al aplicar las producciones: es un árbol de derivación, no un AST reducido.
-
-`parser/predict.ts` contiene una tabla manual que mira hasta dos tokens. Por ejemplo, «por» seguido
-de un número inicia duración; «por» seguido de «un» inicia la construcción del valor. No se está
-generando automáticamente una tabla FIRST/FOLLOW ni demostrando aquí que toda la gramática sea LL(2).
-
-La pila principal es `stack`, de símbolos gramaticales. `markers`, con Z0 y SUB, registra el
-anidamiento para la traza y sus comprobaciones; no se debe describir como un AP general con dos
-pilas independientes. El cierre de los grupos también está exigido por las producciones.
-
-**Demostración:** carga «Pastoreo anidado». En la pestaña Pila se observa Z0 → Z0 SUB → Z0 al leer
-«cuales» y «fin». Si quitas «fin», la entrada no se acepta. El ejemplo se comprobó con el código.
-
-### 4. Extraer datos y pedir lo que falta
-
-`parser/fields.ts`, mediante `extractFields`, recorre el árbol. Un NUM bajo LOTE es el identificador
-del lote; bajo ITEM representa cantidad de animales. Esto es extracción semántica, posterior al
-reconocimiento de la estructura.
-
-`dialog.ts` calcula `missingFields`, redacta `questionFor` y combina una respuesta mediante
-`mergeFields`. Las plantillas declaran qué campos requieren. Es lógica de aplicación que apoya el
-proceso; no hay que atribuirle otro modelo formal distinto.
-
-**Demostración:** escribe:
-
-> arriendo el lote El Porvenir de 3 hectáreas para cultivo de maíz por 6 meses,
-> los insumos los aporta el arrendatario
-
-El sistema pide la fecha y el valor. Responde:
-
-> desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos
-
-El contrato se completa conservando los datos anteriores.
-
-### 5. Máquina de Turing: distinguir el motor y las máquinas de dominio
-
-En `turing/machine.ts`, `TuringMachine` declara el estado inicial, los de aceptación y `delta`.
-La función `runMachine` ejecuta el ciclo:
-
-```ts
+~~~ts
 const symbol = tape[head] ?? BLANK;
 const transition = machine.delta(state, symbol);
-tape[head] = transition.write;
-state = transition.next;
-head = moveHead(transition.move);
-```
+~~~
 
-Esta es la lectura, escritura, cambio de estado y movimiento del cabezal. La cinta se amplía
-cuando se necesita espacio. La memoria del equipo y `maxSteps` limitan la ejecución real.
+El motor aplica `transition.write`, cambia al estado siguiente y mueve el cabezal. En el llenado, `q_buscar` detecta `{{`, `q_leer` reconoce el nombre del marcador, `q_borrar` vuelve hacia la izquierda y `q_escribir` escribe el valor. Las secciones `[[?campo]] … [[/campo]]` aparecen si tienen datos. Una fecha requerida sin dato conserva `{{fecha}}` y el archivo avisa que es un borrador incompleto. Solo un llenado aceptado se ofrece como nueva descarga. Un fallo de análisis o de llenado deja disponible la traza y, si ya existía un documento, la interfaz lo etiqueta **Borrador anterior**.
 
-En `turing/selection.ts`, `selectionTape` pone los campos detectados y los requeridos en la cinta.
-`selectionMachine` los compara, marca coincidencias y escribe conteos unarios. Después,
-`readTallies` interpreta la salida y `isBetter` compara proporciones para elegir la plantilla.
-**Esta última decisión está fuera de la máquina de Turing.** Para cumplir literalmente que toda
-la selección ocurra sobre la cinta faltaría implementar también esa comparación allí.
+**Límite de la formalización.** Los dos controles usan estados parametrizados y símbolos compuestos. El llenado recibe un mapa de valores y la selección hace aritmética con los conteos en su control al escribir el veredicto. Para defender una MT clásica uniforme se necesita fijar Q y Γ, codificar datos en la cinta y descomponer la comparación y copia en transiciones elementales. Las trazas que se muestran son del motor usado para generar el resultado.
 
-En `turing/fill.ts`, `fillMachine` define las operaciones de llenado:
+## Política académica de campos
 
-```text
-q_buscar → encuentra {{
-q_leer[nombre] → lee el nombre hasta }}
-q_borrar[nombre] → vuelve a la izquierda y borra el marcador
-q_escribir[nombre] → escribe el valor y continúa
-q_fin → acepta al llegar a ⊣
-```
+El diálogo lee los requeridos del encabezado de cada plantilla. La fecha admite día y mes, como en el ejemplo completo de §5.6. Si se indica año, se valida con el calendario. §5.5 permite dictar una fecha sin año, que queda sin año en el borrador. Los nombres se pueden confirmar aparte y, si faltan, conservan espacios para completar.
 
-Las secciones opcionales tienen estados auxiliares que las conservan o eliminan según los datos.
-La interfaz muestra las instantáneas del motor, no una secuencia dibujada por separado.
+| Plantilla | Requeridos | Opcionales y efecto |
+| --- | --- | --- |
+| Pastoreo | Lote, tipo de animal, fecha, uso ganadero, valor | Área, cantidad, raza y duración aparecen si se indican. La descripción de una lista se deriva de los animales |
+| Cultivo | Lote, cultivo, fecha, valor | Área, insumos y duración aparecen si se indican |
+| Mixta | Lote, tipo de animal, fecha, uso ganadero, cultivo, valor | Área, cantidad, raza, insumos y duración aparecen si se indican. La descripción de lista es derivada |
 
-**Límite formal:** actualmente un nombre crece dentro de una cadena de estado, como
-`q_leer[ar]`, y un valor completo puede ocupar una sola celda. Que una ejecución tenga longitud
-finita no demuestra que Q y Γ sean conjuntos finitos y fijos para todas las entradas. Para una MT
-clásica uniforme habría que acotar/compilar el control y representar nombres y valores mediante
-una codificación fija en la cinta, con operaciones sobre sus símbolos. El mapa de valores también
-se entrega desde TypeScript; la máquina no descubre por sí misma esos datos en otra cinta.
+Con campos requeridos pendientes, se puede generar un borrador marcado como incompleto cuando la plantilla está identificada y el análisis es válido. El caso con datos requeridos completos mantiene la salida para revisión. El alcance es el borrador académico de la propuesta.
 
-Una forma precisa de presentarlo es: «Tenemos un simulador con operaciones de máquina de Turing
-para comparar campos y llenar plantillas. La formalización de los estados parametrizados y la
-elección final dentro de la cinta son puntos pendientes del modelo».
+## Vocabulario y sugerencias
 
-No hace falta afirmar que sustituir marcadores solo se pueda resolver con una MT. Se eligió este
-modelo para aplicar lectura, escritura y desplazamiento de una cinta dentro del proyecto académico.
+Los alias se definen en [src/core/lexer/synonyms.ts](../src/core/lexer/synonyms.ts). Las clases se reconocen en `TOKEN_DEFINITIONS`. Estos son los grupos que se pueden mostrar y sus límites.
 
-## Por qué TypeScript y qué cambiaría con Python
+| Clase | Forma canónica y variantes | Ejemplo o límite |
+| --- | --- | --- |
+| Animal | `bovinos` ← `vacunos`, `ganado bovino`. `novilla(s)` ← `vaquilla(s)`. `res(es)` conserva su propia categoría | «3 vacunos» conserva bovinos, con la especie concreta pendiente |
+| Raza | `holstein` ← `holstein friesian`. `simmental` ← `simmenthal` | `gir` y `girolando` siguen siendo razas distintas |
+| Cultivo | `frijol` admite grafía con o sin tilde. `banano`, `plátano` y `habichuela` se reconocen como cultivos distintos | «Para sembrar habichuela» usa el marco canónico «para cultivo de» |
+| Uso | `para ceba` ← `para engorde` | `levante` conserva su propio uso |
+| Mes | `septiembre` ← `setiembre` | Ambos dan mes 9 |
+| Tiempo | Singular y plural de día, semana, quincena, mes y año | Dos quincenas conservan su unidad |
+| Área | `hectáreas` ← `ha` tras «de» y una cantidad. `fanegada` y `cuadra` conservan su unidad | «Lote 20 de 8 fanegadas» imprime «8 fanegadas» |
+| Moneda y escala | `pesos` ← `pesos colombianos`, `COP`, `pesos COP`. `mil` y `millón` se tratan como multiplicadores distintos | «900 mil pesos COP» imprime `$ 900.000 pesos` |
+| Verbo | `arriendo` ← `rento`, `alquilamos`, `doy en arriendo`, `doy en alquiler`. `se arrienda` ← `se da en arriendo`, `se entrega en arriendo`, entre otros | Verbo inicial opcional |
+| Conector | `y` y `e` admitidos como conjunciones | «3 caballos e insumos los aporta el arrendador» separa cláusulas |
+| Insumos | `los insumos los aporta el <rol>` ← `el <rol> corre con los insumos`, `pone los insumos` o `suministra los insumos` en las formas registradas | Los proveedores siguen siendo dos roles distintos |
+| Palabra clave | `desde el` ← `a partir del`. `lote` ← `predio`, `parcela` y variantes. `arrendador`/`arrendatario` tienen formas femeninas y alias de rol | `nombre` separa el rol del dato personal |
+| Número, nombre y coma | Dígitos o palabras numéricas reconocidas, nombre original y separador literal | No se ofrecen correcciones aproximadas para estas clases |
 
-La propuesta dejó el lenguaje por definir. TypeScript se eligió porque la aplicación tiene una
-interfaz web con dictado, edición y visualizaciones, y puede ejecutarse en el navegador.
+**Distancia de Levenshtein.** [src/core/lexer/similarity.ts](../src/core/lexer/similarity.ts), `levenshtein` y `suggestBreedCorrections`. Solo busca entre razas conocidas cuando el AP rechazó una palabra desconocida tras un animal seguido de «de raza». Hasta cuatro letras se conserva el error original. De cinco a ocho se admite una edición y desde nueve se admiten dos. Si hay candidatos cercanos se ofrecen para confirmación. «20 vacas de raza holsten» sugiere `Holstein` con distancia 1. La interfaz conserva la transcripción original y vuelve a analizar el texto solo tras confirmar. Nombres, roles, identificadores, cifras, monedas y unidades quedan fuera de la búsqueda aproximada.
 
-- La Web Speech API ya está disponible en navegadores compatibles. El adaptador está en `ui/voice.ts`;
-  no se implementó un reconocedor de voz propio.
-- El núcleo y la interfaz comparten tipos: `Token`, `ParseTree`, `ContractFields`, `Transition` y las
-  trazas. Por ejemplo, `Move = "L" | "R" | "S"` permite detectar en compilación un movimiento mal escrito.
-- Las uniones discriminadas de `RegexNode` permiten representar claramente cada operador de una ER.
-- TypeScript se transforma en JavaScript. React muestra la interfaz y Vite construye archivos
-  estáticos que se pueden desplegar en Netlify sin mantener un backend para este núcleo.
+## Casos para mostrar en vivo
 
-Python también permite implementar todos estos algoritmos y puede ser cómodo para un prototipo
-de consola o ejercicios de teoría. En una aplicación web, la solución habitual sería poner el
-núcleo Python en un servidor y comunicarlo con la interfaz JavaScript, o incorporar un entorno
-Python en el navegador. Ambas opciones son posibles, pero agregan piezas que aquí no se necesitan.
+1. **Aceptado.** Dictar o pegar «Lote 20 para cultivo de maíz desde el 2 de marzo de 2027 valor 900 mil pesos, arrendador nombre Juan de la Cruz, arrendataria nombre Ana Gómez». Abrir Tokens y Pila, confirmar los nombres si se desea, abrir Selección y buscar `RESULT:CULTIVO:0:0`. En Llenado, seguir el cabezal hasta `q_fin`. Descargar `contrato-cultivo.md` y comprobar lote 20, maíz, `$ 900.000 pesos` y los dos nombres en Partes y Firmas.
+2. **Rechazado.** Dictar o pegar «20 vacas de los cuales 5 terneras». Pila muestra el cierre pendiente, diagnóstico «falta 'fin' para cerrar 'de los cuales'» y sin documento nuevo. Con «20 vacas fin», mostrar el rechazo por cierre sobrante. La prueba del núcleo comprueba ambos y la prueba E2E verifica la conservación de un borrador previo ante un cierre inválido.
+3. **Corrección con confirmación.** Usar «lote 20 para 4 vacas de raza holsten para ceba desde el 2 de marzo valor 900 mil pesos». Mostrar la sugerencia, pulsar **Confirmar Holstein** y comparar el `.md` con la transcripción conservada. Playwright cubre este caso con texto.
 
-La justificación no es que TypeScript tenga más capacidad computacional ni que Python no sirva.
-Es que encaja con el medio elegido para demostrar el proyecto. Los tipos ayudan a detectar errores
-de programación; no prueban que una gramática, un autómata o una transición sean correctos.
-
-## Matices que conviene tener claros
-
-- El sistema reconoce un vocabulario y unas estructuras definidas, no cualquier frase del español.
-- El analizador tiene recuperación de errores: puede descartar palabras que no inician cláusulas
-  y continuar con avisos. Aceptar tras esa recuperación no equivale a que el texto original pertenezca
-  estrictamente a la gramática sin modificaciones.
-- `runPipeline` decide generar a partir de campos disponibles o de la opción de forzar la generación;
-  no usa `parse.ok` como condición directa. Esto importa especialmente al reutilizar datos anteriores.
-- La comparación de plantillas se realiza por proporción de campos encontrados, no por significado
-  general de la frase ni por un modelo de lenguaje.
-- El grafo de Turing agrupa familias visitadas. Una instantánea puede saltar varias transiciones;
-  la próxima transición mostrada se obtiene de `delta`, pero el botón avanza entre instantáneas.
-- Los temas se implementan en `src/core/`. React, Vite, Playwright y Prettier son herramientas de
-  interfaz, compilación o desarrollo, no temas formales adicionales de la propuesta.
-
-## Orden sugerido para un adelanto de 7 minutos
-
-1. **1 minuto:** problema rural y ejemplo de entrada; abrir `runPipeline`.
-2. **1 minuto y medio:** mostrar una ER, Thompson y la construcción de subconjuntos. Probar `vacas` en el AFD.
-3. **1 minuto y medio:** mostrar las producciones recursivas y el apilado de símbolos. Usar el ejemplo anidado.
-4. **2 minutos:** mostrar el ciclo lectura/escritura/movimiento, el llenado y el límite de la selección actual.
-5. **1 minuto:** justificar TypeScript y explicar los pendientes de formalización.
-
-Si falla el micrófono, usa los ejemplos escritos: el núcleo formal recibe el mismo tipo de entrada.
-La revisión comprobó las tres plantillas, el diálogo por faltantes, aceptación/rechazo del AFD de
-ANIMAL y rechazo de la lista anidada sin «fin». Las pruebas automatizadas complementan estos ejemplos,
-pero no sustituyen una demostración matemática del modelo.
+Conservar una demo de cada plantilla. Si se usa el micrófono en la exposición, registrar navegador, versión, permiso, dictado, transcripción original, correcciones y resultado por separado de la voz simulada.
