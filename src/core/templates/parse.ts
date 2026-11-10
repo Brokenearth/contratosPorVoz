@@ -15,7 +15,7 @@ const FENCE = "---";
  *   body with {{campo}} markers and [[?campo]] … [[/campo]] optional sections
  */
 export function parseTemplate(source: string): TemplateDef {
-  const lines = source.split("\n");
+  const lines = source.split(/\r?\n/);
   const end = lines.indexOf(FENCE, 1);
   if (lines[0]?.trim() !== FENCE || end === -1) throw new Error("La plantilla no tiene bloque de declaración ---");
 

@@ -13,21 +13,37 @@ const exampleFields: ContractFields = {
 };
 
 describe("parseTemplate", () => {
-  it("reads the declaration block", () => {
-    const def = parseTemplate(
-      "---\nid: CULTIVO\ntitulo: Cultivo\nrequeridos: lote, cultivo\nopcionales: fecha\n---\nCuerpo",
-    );
+  it.each([
+    ["LF", "\n"],
+    ["CRLF", "\r\n"],
+  ])("reads the declaration block and normalizes the body with %s", (_format, newline) => {
+    const source = [
+      "---",
+      "id: CULTIVO",
+      "titulo: Cultivo",
+      "requeridos: lote, cultivo",
+      "opcionales: fecha",
+      "---",
+      "Primer párrafo",
+      "",
+      "Segundo párrafo",
+    ].join(newline);
+    const def = parseTemplate(source);
     expect(def).toEqual({
       id: "CULTIVO",
       title: "Cultivo",
       required: ["lote", "cultivo"],
       optional: ["fecha"],
-      body: "Cuerpo",
+      body: "Primer párrafo\n\nSegundo párrafo",
     });
   });
 
   it("rejects a template without declaration", () => {
     expect(() => parseTemplate("sin bloque")).toThrow();
+  });
+
+  it("rejects a declaration without a closing fence", () => {
+    expect(() => parseTemplate("---\r\nid: CULTIVO\r\nCuerpo")).toThrow("La plantilla no tiene bloque de declaración ---");
   });
 });
 
