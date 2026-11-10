@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { runPipeline, type PipelineResult } from "../core/pipeline";
+import { runPipeline, type PipelineOptions, type PipelineResult } from "../core/pipeline";
 import type { ContractFields } from "../core/types";
 import { ContractPanel } from "./ContractPanel";
 import { Conversation } from "./Conversation";
@@ -11,6 +11,7 @@ import type { InputSource } from "./voice";
 interface Analysis {
   input: string;
   previous: ContractFields;
+  options: PipelineOptions;
   result: PipelineResult;
   id: number;
 }
@@ -19,11 +20,12 @@ export function App({ source }: { source?: InputSource }) {
   const [text, setText] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
 
-  function analyze(input: string, previous: ContractFields, force = false) {
+  function analyze(input: string, previous: ContractFields, options: PipelineOptions = {}) {
     setAnalysis((current) => ({
       input,
       previous,
-      result: runPipeline(input, previous, { force }),
+      options,
+      result: runPipeline(input, previous, options),
       id: (current?.id ?? 0) + 1,
     }));
   }
@@ -75,8 +77,11 @@ export function App({ source }: { source?: InputSource }) {
                 key={analysis.id}
                 result={result}
                 source={source}
-                onAnswer={(answer) => analyze(answer, result.fields)}
-                onForce={() => analyze(analysis.input, analysis.previous, true)}
+                onAnswer={(answer) => analyze(answer, result.fields, { confirmedNames: analysis.options.confirmedNames })}
+                onForce={() => analyze(analysis.input, analysis.previous, { ...analysis.options, force: true })}
+                onConfirmNames={(confirmedNames) =>
+                  analyze(analysis.input, analysis.previous, { ...analysis.options, confirmedNames })
+                }
               />
             )}
           </div>

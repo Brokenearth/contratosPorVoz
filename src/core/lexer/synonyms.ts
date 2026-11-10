@@ -1,5 +1,6 @@
 import type { Token } from "../types";
 import { normalize } from "./normalize";
+import { PARTY_ALIASES } from "./parties";
 
 /**
  * Synonym dictionary: canonical phrase ← phrases that mean the same in a dictation.
@@ -32,8 +33,7 @@ export const SYNONYMS: Readonly<Record<string, readonly string[]>> = {
   ],
   pesos: ["pesos colombianos", "cop"],
   vacas: ["reses", "vacunos", "bovinos", "cabezas de ganado"],
-  arrendador: ["propietario", "propietaria", "dueño", "dueña", "arrendante"],
-  arrendatario: ["inquilino", "inquilina"],
+  ...PARTY_ALIASES,
   "los insumos los aporta el arrendador": [
     "los insumos corren por cuenta del arrendador", "el arrendador pone los insumos", "el arrendador suministra los insumos",
   ],
@@ -59,7 +59,7 @@ const MAX_PASSES = 3;
 function ruleAt(tokens: Token[], i: number): Rule | undefined {
   return RULES.find((rule) => rule.words.every((word, k) => {
     const token = tokens[i + k];
-    return token !== undefined && normalize(token.lexeme) === word;
+    return token !== undefined && !token.partyName && normalize(token.lexeme) === word;
   }));
 }
 

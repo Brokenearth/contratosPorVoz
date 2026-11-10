@@ -1,13 +1,15 @@
 import { mergeFields, missingFields, questionFor } from "./dialog";
 import { tokenize } from "./lexer";
 import { parseContract, type ParseOutcome } from "./parser";
+import { normalizePartyName, PARTY_ROLES } from "./partyNames";
 import { contractValues, extractedFieldNames, getTemplate, TEMPLATES } from "./templates";
 import { fillTemplate, selectTemplate } from "./turing";
-import type { ContractFields, LexResult, SelectionResult, TemplateDef, TuringRun } from "./types";
+import type { ContractFields, LexResult, PartyNames, SelectionResult, TemplateDef, TuringRun } from "./types";
 
 export interface PipelineOptions {
   /** Generate the contract even if required fields are missing (they stay as `{{campo}}`). */
   force?: boolean;
+  confirmedNames?: PartyNames;
 }
 
 export interface PipelineResult {
@@ -15,6 +17,7 @@ export interface PipelineResult {
   parse: ParseOutcome;
   /** Fields of this utterance merged over `previousFields`. */
   fields: ContractFields;
+  confirmedNames?: PartyNames;
   selection: SelectionResult;
   template: TemplateDef | null;
   /** Required fields of the selected template that are still missing. */
@@ -42,6 +45,17 @@ export function runPipeline(
   const lex = tokenize(text);
   const parse = parseContract(lex.tokens);
   const fields = mergeFields(previousFields, parse.fields);
+  const partyWarnings: string[] = [];
+  const confirmedNames = options.confirmedNames;
+  for (const role of PARTY_ROLES) {
+    if (!confirmedNames || !Object.hasOwn(confirmedNames, role)) continue;
+    const confirmed = normalizePartyName(confirmedNames[role] ?? "");
+    const detected = parse.fields[role];
+    if (confirmed && detected && confirmed !== detected) {
+      partyWarnings.push(`El dictado propone «${detected}» para ${role}. Se conservó «${confirmed}».`);
+    }
+    fields[role] = confirmed;
+  }
   const selection = selectTemplate(extractedFieldNames(fields), TEMPLATES);
   const template = selection.templateId === null ? null : getTemplate(selection.templateId);
   const missing = template ? missingFields(fields, template.required) : [];
@@ -52,8 +66,9 @@ export function runPipeline(
     ...lex.errors.map((e) => `${e.message} en la posición ${e.position}.`),
     ...parse.errors,
     ...parse.warnings,
+    ...partyWarnings,
   ];
-  return { lex, parse, fields, selection, template, missing, question, contract, errors };
+  return { lex, parse, fields, confirmedNames, selection, template, missing, question, contract, errors };
 }
 
 /** Example dictations for the UI, covering the three templates. */

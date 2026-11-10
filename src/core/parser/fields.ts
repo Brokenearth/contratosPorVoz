@@ -1,5 +1,6 @@
 import type { AnimalItem, ContractFields, ParseTree, Token } from "../types";
 import { normalize } from "./predict";
+import { normalizePartyName } from "../partyNames";
 
 const MONTHS = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -126,8 +127,10 @@ function visit(node: ParseTree, fields: ContractFields): void {
       if (!role || tail.length === 0) return;
       const who = normalize(role.lexeme);
       if (tail[0] && normalize(tail[0].lexeme) === "aporta") fields.insumos = who;
-      else if (who === "arrendador") fields.arrendador = properName(tail);
-      else fields.arrendatario = properName(tail);
+      else {
+        const name = normalizePartyName(tail.filter((token) => token.type === "NOMBRE").map((token) => token.lexeme).join(" "));
+        if (name) fields[who === "arrendador" ? "arrendador" : "arrendatario"] = name;
+      }
       return;
     }
     default:

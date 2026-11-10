@@ -51,6 +51,7 @@ export const PREDICT: Record<string, Row[]> = {
     row(6, "cultivo"), row(6, '"para"', "cultivo"), row(6, '"de"', "cultivo"),
     row(7, '"insumos"'),
     row(8, '"arrendador"'), row(8, '"arrendatario"'), row(8, '"el"', '"arrendador"'), row(8, '"el"', '"arrendatario"'),
+    row(8, '"la"', '"arrendador"'), row(8, '"la"', '"arrendatario"'),
     row(9, "verbo"), row(9, '"se"', "verbo"),
     row(10, '","'), row(10, '"y"'),
   ],
@@ -73,7 +74,8 @@ export const PREDICT: Record<string, Row[]> = {
   USOTAIL: [row(0, '"de"', "uso")],
   CULTPREF: [row(0, '"para"'), row(1, '"de"')],
   ROL: [row(0, '"arrendador"'), row(1, '"arrendatario"')],
-  ROLTAIL: [row(0, '"aporta"'), row(1, "nombre")],
+  ROLTAIL: [row(0, '"aporta"'), row(1, '"nombre"'), row(2, "nombre")],
+  PARTNAME: [row(0, "nombre")],
   ART: [row(0, '"el"'), row(1, '"la"'), row(2, '"los"'), row(3, '"las"')],
   VERBO: [row(0, "verbo"), row(1, '"se"')],
 };

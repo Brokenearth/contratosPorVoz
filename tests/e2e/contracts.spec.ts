@@ -96,6 +96,24 @@ test("generate anyway leaves pending markers", async ({ page }) => {
   expect(file.content).toContain("{{valor}}");
 });
 
+test("reviewed party names appear in the downloaded header and signatures", async ({ page }) => {
+  await analyze(
+    page,
+    "arrendador nombre Luis Toro lote 20 de 3 hectáreas para cultivo de maíz " +
+      "por 6 meses desde el 1 de diciembre de 2026 valor 2 millones de pesos, el arrendatario aporta los insumos",
+  );
+  await expect(page.getByLabel("Arrendador", { exact: true })).toHaveValue("Luis Toro");
+  await page.getByLabel("Arrendador", { exact: true }).fill("Juan de la Cruz");
+  await page.getByLabel("Arrendatario", { exact: true }).fill("María José Gómez");
+  await page.getByRole("button", { name: "Confirmar nombres" }).click();
+  const { content } = await downloadContract(page);
+  const [header, signatures] = content.split("## FIRMAS");
+  expect(header).toContain("Entre los suscritos, Juan de la Cruz");
+  expect(header).toContain("María José Gómez");
+  expect(signatures).toMatch(/\| Juan de la Cruz\s+\| María José Gómez\s+\|/);
+  expect(content).not.toContain("Luis Toro");
+});
+
 test("voice: a fake SpeechRecognition fills the editable textarea", async ({ page }) => {
   await page.addInitScript(() => {
     class FakeRecognition {

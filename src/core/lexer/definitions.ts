@@ -155,7 +155,7 @@ export const TOKEN_DEFINITIONS: readonly TokenDefinition[] = [
       ...forms("s", "lote"),
       ...forms("", "en", "el", "la", "los", "las", "de", "del", "al", "a", "raza", "por", "para", "un", "una"),
       ...forms("", "valor", "desde", "hasta", "durante", "con", "se", "cuales", "fin"),
-      ...forms("", "arrendador", "arrendadora", "arrendatario", "arrendataria", "aporta", "aportan", "aporte"),
+      ...forms("", "arrendador", "arrendadora", "arrendatario", "arrendataria", "nombre", "aporta", "aportan", "aporte"),
     ]),
     value: (normalized) => normalized,
   },

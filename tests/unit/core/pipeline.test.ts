@@ -12,6 +12,34 @@ function markerHistory(steps: { stack: string[] }[]): string[] {
 }
 
 describe("runPipeline with the real lexer", () => {
+  it.each([
+    ["Arrendador nombre Juan de la Cruz", { arrendador: "Juan de la Cruz" }],
+    ["arrendataria nombre Ana Gómez", { arrendatario: "Ana Gómez" }],
+    ["arrendador Juan Pérez", { arrendador: "Juan Pérez" }],
+    ["la arrendadora María José del Río", { arrendador: "María José del Río" }],
+    ["Arrendador nombre Luis Toro", { arrendador: "Luis Toro" }],
+    ["arrendador Luz Dueña", { arrendador: "Luz Dueña" }],
+  ])("extracts the complete party name from %s", (phrase, expected) => {
+    const result = runPipeline(phrase);
+    expect(result.errors).toEqual([]);
+    expect(result.fields).toEqual(expected);
+  });
+
+  it("keeps the supplier separate from the parties and closes names at the next clause", () => {
+    const result = runPipeline(
+      "arrendadora nombre María José de la Cruz lote 20 para 20 toros " +
+        "la arrendataria aporta los insumos y arrendataria nombre Ana Gómez",
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.fields).toEqual({
+      arrendador: "María José de la Cruz",
+      arrendatario: "Ana Gómez",
+      insumos: "arrendatario",
+      lote: "20",
+      animales: [{ animal: "toros", cantidad: 20 }],
+    });
+  });
+
   it("§6 example → exact CLÁUSULA SEGUNDA", () => {
     const result = runPipeline(
       "arriendo lote La Esperanza de 5 hectáreas para 20 vacas de raza holstein para producción de leche por 12 meses",

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import type { PipelineResult } from "../core/pipeline";
+import type { PartyNames } from "../core/types";
 import { DictationField } from "./DictationField";
 import { Panel } from "./Panel";
+import { PartyReview } from "./PartyReview";
 import type { InputSource } from "./voice";
 
 const LABELS: Record<string, string> = {
@@ -24,10 +26,11 @@ interface Props {
   result: PipelineResult;
   onAnswer: (answer: string) => void;
   onForce: () => void;
+  onConfirmNames: (names: PartyNames) => void;
   source?: InputSource;
 }
 
-export function Conversation({ result, onAnswer, onForce, source }: Props) {
+export function Conversation({ result, onAnswer, onForce, onConfirmNames, source }: Props) {
   const [answer, setAnswer] = useState("");
   const [listening, setListening] = useState(false);
   const { template, missing, question, contract, errors } = result;
@@ -73,6 +76,8 @@ export function Conversation({ result, onAnswer, onForce, source }: Props) {
           </ul>
         </details>
       )}
+
+      <PartyReview names={result.fields} confirmed={result.confirmedNames !== undefined} onConfirm={onConfirmNames} />
 
       {complete ? (
         <p role="status" className="completion-note">

@@ -59,7 +59,8 @@ const RULES: [string, string[][]][] = [
   ["INSUMOS", [["ART", '"insumos"', "ART", '"aporta"', "ART", "ROL"]]],
   ["PARTES", [["ART", "ROL", "ROLTAIL"]]],
   ["ROL", [['"arrendador"'], ['"arrendatario"']]],
-  ["ROLTAIL", [['"aporta"', "ART", '"insumos"'], ["nombre", "NOMBRES"]]],
+  ["ROLTAIL", [['"aporta"', "ART", '"insumos"'], ['"nombre"', "PARTNAME"], ["nombre", "NOMBRES"], []]],
+  ["PARTNAME", [["nombre", "NOMBRES"], []]],
   ["ART", [['"el"'], ['"la"'], ['"los"'], ['"las"'], []]],
   ["VERBO", [["verbo"], ['"se"', "verbo"]]],
 ];

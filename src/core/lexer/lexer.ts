@@ -2,6 +2,7 @@ import { type Automaton, type Dfa, compileRegex, longestMatch } from "../regex";
 import type { LexResult, LexStep, Token } from "../types";
 import { NAMED_DEFINITIONS, TOKEN_DEFINITIONS, type TokenDefinition } from "./definitions";
 import { normalize } from "./normalize";
+import { groupPartyNames } from "./parties";
 import { applySynonyms } from "./synonyms";
 
 export interface TokenAutomata {
@@ -92,5 +93,5 @@ function scan(text: string): LexResult {
 /** Lexical analysis: DFA scan, then the synonym dictionary rewrites phrases into canonical tokens. */
 export function tokenize(text: string): LexResult {
   const result = scan(text);
-  return { ...result, tokens: applySynonyms(result.tokens, text, (canonical) => scan(canonical).tokens) };
+  return { ...result, tokens: applySynonyms(groupPartyNames(result.tokens, text), text, (canonical) => scan(canonical).tokens) };
 }
