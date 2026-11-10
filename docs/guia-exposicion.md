@@ -1,6 +1,6 @@
 # Guía para la exposición · Del dictado al contrato
 
-El proyecto transforma una descripción de arrendamiento rural en un borrador Markdown. El navegador transcribe la voz y el texto queda editable. A partir del texto, el núcleo ejecuta sus propios autómatas y máquinas, y la interfaz muestra las trazas de esa ejecución. Los datos de esta guía son ficticios.
+El proyecto transforma una descripción de arrendamiento rural en un borrador Markdown. El navegador transcribe la voz y el texto queda editable. A partir del texto, el núcleo ejecuta sus propios autómatas y máquinas, y la interfaz muestra las trazas de esa ejecución. Los datos de esta guía son ficticios. **Cómo funciona por dentro** es un laboratorio educativo que se abre a voluntad. El flujo de dictado, revisión y descarga funciona desde el panel principal.
 
 ## Recorrido principal
 
@@ -27,6 +27,10 @@ return { definition, regex: definition.regex, nfa, dfa };
 
 `parseRegex` convierte la ER en un árbol, `thompson` arma el AFN con transiciones λ y `subsetConstruction` construye estados que representan conjuntos del AFN. `bestMatch` ejecuta los AFD, conserva la coincidencia más larga y desempata por prioridad de definición. `20` da `NUM(20)` y `vacas` da `ANIMAL(vaca)`. En la vista del AFD de ANIMAL, `vacasx` rechaza al leer `x`. En el tokenizador completo puede pertenecer a la categoría `NOMBRE`. Las pruebas de `regex.test.ts` y `lexer.test.ts` comprueban ambas etapas.
 
+**Ejemplo real con ANIMAL.** La ER contiene el fragmento `vaca(s|λ)`. Thompson construye una rama que consume `s` y otra que llega al final con λ, sin leer otro carácter. Así, ambas ramas comparten el camino que leyó `vaca`. En el AFD cada estado representa un conjunto de estados del AFN. `subsetConstruction` parte del cierre λ del inicio y, para cada carácter, calcula primero `move` y luego el cierre λ del conjunto alcanzado. Si el conjunto incluye un final del AFN, el estado del AFD acepta.
+
+En el diccionario de esta versión, `vaca` alcanza `D48` y acepta. Si sigue `s`, llega a `D55` y también acepta. Desde allí la entrada `x` rechaza para este token. La ruta en la aplicación usa el AFD y retiene la coincidencia más larga. Se podría diseñar el AFD de `vaca(s|λ)` a mano con un estado final al leer `vaca` y otro después de `s`. La ruta actual compila todas las ER con un procedimiento común y permite enseñar los dos modelos a partir del mismo diccionario.
+
 Las equivalencias exactas se aplican a tokens en `applySynonyms`, de la frase más larga a la más corta. La forma canónica vuelve a pasar por los AFD y conserva el tramo original en `synonymOf`. La traza del escaneo corresponde a la entrada original.
 
 ### 3. Gramática, pila y árbol de derivación
@@ -41,18 +45,20 @@ PARTES   → ART ROL ROLTAIL
 
 Al expandir una producción, `runPda` apila su cuerpo en orden inverso y compara los terminales con la entrada. `predict` usa una tabla manual con uno o dos tokens de anticipación. Por ejemplo, «por» seguido de número abre duración y «por un» abre valor. El árbol se construye con las producciones usadas. En la traza, `symbols` muestra la pila de reconocimiento y `stack` registra `Z0/SUB` como comprobación de anidamiento.
 
-Para `20 vacas de los cuales 5 terneras de los cuales 2 terneras fin fin y 3 caballos`, la pila de símbolos tiene dos cierres `fin` pendientes en el punto más profundo. Los marcadores recorren `Z0 → Z0 SUB → Z0 SUB SUB → Z0 SUB → Z0`. Al cerrar ambos grupos, los caballos quedan en la lista principal. `pipeline.test.ts` comprueba la lista anidada, la lista hermana y su Markdown.
+Para `20 vacas de los cuales 5 terneras de los cuales 2 terneras fin fin y 3 caballos`, la pila de símbolos tiene dos cierres `fin` pendientes en el punto más profundo. Los marcadores recorren `Z0 → Z0 SUB → Z0 SUB SUB → Z0 SUB → Z0`. Al cerrar ambos grupos, los caballos quedan en la lista principal. Si se elimina el segundo `fin` en un dictado completo, el analizador llega a la siguiente cláusula con ese terminal pendiente y rechaza. El árbol de derivación muestra la estructura producida. La pila de símbolos registra los terminales pendientes y determina dónde debe cerrar cada grupo. `pipeline.test.ts` comprueba la lista anidada, la lista hermana y su Markdown. En el laboratorio, el árbol es la vista inicial de una entrada aceptada y Pila es la vista inicial de una entrada rechazada.
 
 ### 4. Extracción y revisión de partes
 
 **Archivo y función.** [src/core/lexer/parties.ts](../src/core/lexer/parties.ts), `groupPartyNames`. [src/core/parser/fields.ts](../src/core/parser/fields.ts), `extractFields`. [src/ui/PartyReview.tsx](../src/ui/PartyReview.tsx), `PartyReview`.
 
 ~~~ts
-const name = text.slice(start.start, last.end);
-grouped.push({ type: "NOMBRE", lexeme: name, value: name, start: start.start, end: last.end, partyName: true });
+const name = text.slice(first.start, last.end);
+return normalizePartyName(name)
+  ? { type: "NOMBRE", lexeme: name, value: name, start: first.start, end: last.end, partyName: true }
+  : undefined;
 ~~~
 
-La agrupación contextual conserva el texto de un nombre ya escaneado por los AFD. La producción de partes consume el rol y el marcador `nombre` por separado. `extractFields` lee el `NOMBRE` desde el árbol. «Arrendador nombre Juan de la Cruz» guarda `Juan de la Cruz`. «Arrendataria nombre Ana Gómez» guarda `Ana Gómez`. «Arrendador Luis Toro» conserva `Toro` dentro del nombre. «El arrendador aporta los insumos» registra el proveedor. Si se dictan dos nombres diferentes para el mismo rol, el análisis pide revisión y deja libre la casilla.
+La agrupación contextual conserva el texto de un nombre ya escaneado por los AFD. Busca el rol y compone la relación con predicados de identidad, artículos y enlaces. Funciona con el nombre a la derecha en «el arrendador es Juan Gomez» y a la izquierda en «el vecino Juan quien sería el arrendador». El AP recibe una cláusula de partes normalizada. «El arrendador es Juan o Pedro» pide revisión de la casilla. `extractFields` lee el `NOMBRE` desde el árbol. «Arrendador nombre Juan de la Cruz» guarda `Juan de la Cruz`. «Arrendataria nombre Ana Gómez» guarda `Ana Gómez`. «Arrendador Luis Toro» conserva `Toro` dentro del nombre. «El arrendador aporta los insumos» registra el proveedor. Si se dictan dos nombres diferentes para el mismo rol, el análisis pide revisión y deja libre la casilla.
 
 | Estrategia | Uso en la exposición |
 | --- | --- |
@@ -118,12 +124,12 @@ Los alias se definen en [src/core/lexer/synonyms.ts](../src/core/lexer/synonyms.
 | Palabra clave | `desde el` ← `a partir del`. `lote` ← `predio`, `parcela` y variantes. `arrendador`/`arrendatario` tienen formas femeninas y alias de rol | `nombre` separa el rol del dato personal |
 | Número, nombre y coma | Dígitos o palabras numéricas reconocidas, nombre original y separador literal | No se ofrecen correcciones aproximadas para estas clases |
 
-**Distancia de Levenshtein.** [src/core/lexer/similarity.ts](../src/core/lexer/similarity.ts), `levenshtein` y `suggestBreedCorrections`. Solo busca entre razas conocidas cuando el AP rechazó una palabra desconocida tras un animal seguido de «de raza». Hasta cuatro letras se conserva el error original. De cinco a ocho se admite una edición y desde nueve se admiten dos. Si hay candidatos cercanos se ofrecen para confirmación. «20 vacas de raza holsten» sugiere `Holstein` con distancia 1. La interfaz conserva la transcripción original y vuelve a analizar el texto solo tras confirmar. Nombres, roles, identificadores, cifras, monedas y unidades quedan fuera de la búsqueda aproximada.
+**Distancia de Levenshtein.** [src/core/lexer/similarity.ts](../src/core/lexer/similarity.ts), `levenshtein` y `correctTranscription`. Después de aplicar equivalencias exactas, filtra las formas del diccionario por posición. Busca animales tras una cantidad de la cláusula de animales, razas tras un animal, cultivos en su cláusula, destinos después de «para» y multiplicadores en expresiones explícitas de valor. Aplica un límite de una, dos o tres ediciones según la longitud y agrupa flexiones de la misma palabra. Una coincidencia clara se corrige, pasa otra vez por los AFD y queda visible junto a la transcripción original. Las opciones cercanas de distinto significado se ofrecen para confirmar. En los valores se busca también una escala alternativa a una edición adicional para evitar confundir miles con millones. Nombres, roles, identificadores, cifras, denominaciones de moneda y unidades conservan su forma.
 
 ## Casos para mostrar en vivo
 
 1. **Aceptado.** Dictar o pegar «Lote 20 para cultivo de maíz desde el 2 de marzo de 2027 valor 900 mil pesos, arrendador nombre Juan de la Cruz, arrendataria nombre Ana Gómez». Abrir Tokens y Pila, confirmar los nombres si se desea, abrir Selección y buscar `RESULT:CULTIVO:0:0`. En Llenado, seguir el cabezal hasta `q_fin`. Descargar `contrato-cultivo.md` y comprobar lote 20, maíz, `$ 900.000 pesos` y los dos nombres en Partes y Firmas.
 2. **Rechazado.** Dictar o pegar «20 vacas de los cuales 5 terneras». Pila muestra el cierre pendiente, diagnóstico «falta 'fin' para cerrar 'de los cuales'» y sin documento nuevo. Con «20 vacas fin», mostrar el rechazo por cierre sobrante. La prueba del núcleo comprueba ambos y la prueba E2E verifica la conservación de un borrador previo ante un cierre inválido.
-3. **Corrección con confirmación.** Usar «lote 20 para 4 vacas de raza holsten para ceba desde el 2 de marzo valor 900 mil pesos». Mostrar la sugerencia, pulsar **Confirmar Holstein** y comparar el `.md` con la transcripción conservada. Playwright cubre este caso con texto.
+3. **Corrección contextual.** Usar «lote 20 para 4 baca de raza holste para ceba desde el 2 de marzo valor 2 milones de pesos». Mostrar las correcciones aplicadas, la transcripción original y el `.md` con vacas Holstein y dos millones. Cambiar `holste` por `norolando` para mostrar Normando y Girolando. La descarga se habilita al confirmar una opción. Playwright cubre ambos comportamientos con texto.
 
 Conservar una demo de cada plantilla. Si se usa el micrófono en la exposición, registrar navegador, versión, permiso, dictado, transcripción original, correcciones y resultado por separado de la voz simulada.

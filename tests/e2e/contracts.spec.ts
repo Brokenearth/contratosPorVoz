@@ -74,6 +74,8 @@ test("mixta: generates and downloads, theory panels and Turing machine", async (
   expect(file.content).toContain("maíz");
   expect(file.content).toContain("$ 8.000.000 pesos");
 
+  await expect(page.getByRole("tablist", { name: "Paneles de teoría" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Abrir laboratorio educativo" }).click();
   await page.getByRole("tab", { name: "Máquina de Turing" }).click();
   await expect(page.getByTestId("mt-estado")).toHaveText("q_buscar");
   await page.getByRole("button", { name: "Paso" }).click();
@@ -120,6 +122,22 @@ for (const [kind, use] of [
     expect(content).not.toContain("Luis Toro");
   });
 }
+
+test("confirms who holds a role when the phrasing is ambiguous", async ({ page }) => {
+  const agreement = "lote 20 para cultivo de maíz desde el 2 de marzo valor 900 mil pesos";
+  await analyze(page, agreement + ", el vecino Juan quien sería el arrendador, la arrendataria es Ana Gómez");
+  await expect(page.getByLabel("Arrendador", { exact: true })).toHaveValue("Juan");
+  await expect(page.getByLabel("Arrendatario", { exact: true })).toHaveValue("Ana Gómez");
+
+  await analyze(page, agreement + ", el arrendador es Juan o Pedro, la arrendataria es Ana Gómez");
+  await expect(page.getByText(/nombre asociado a «arrendador» es ambiguo/i)).toBeVisible();
+  await expect(page.getByLabel("Arrendador", { exact: true })).toHaveValue("");
+  await page.getByLabel("Arrendador", { exact: true }).fill("Juan Gomez");
+  await page.getByRole("button", { name: "Confirmar nombres" }).click();
+  const file = await downloadContract(page);
+  expect(file.content).toContain("Entre los suscritos, Juan Gomez");
+  expect(file.content).toMatch(/\| Juan Gomez\s+\| Ana Gómez\s+\|/);
+});
 
 test("repairs clear words and asks about ambiguous alternatives before generating", async ({ page }) => {
   await analyze(page, "lote 20 para 4 bombino de raza norolando para ceba desde el 2 de marzo valor 2 milones de pesos");
@@ -194,6 +212,7 @@ test("voice: a fake SpeechRecognition fills the editable textarea", async ({ pag
 test("simulators: rejection, nested stack and final Turing state", async ({ page }) => {
   await page.getByRole("button", { name: "Pastoreo anidado" }).click();
   await page.getByRole("button", { name: "Analizar", exact: true }).click();
+  await page.getByRole("button", { name: "Abrir laboratorio educativo" }).click();
   await page.getByRole("tab", { name: "Autómata del léxico", exact: true }).click();
   await page.getByLabel("Cadena de prueba").fill("2x");
   await page.getByRole("button", { name: "Paso", exact: true }).click();
@@ -214,6 +233,7 @@ test("mobile: fits a narrow viewport and keeps diagrams usable", async ({ page }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Cultivo (maíz)" }).click();
   await page.getByRole("button", { name: "Analizar", exact: true }).click();
+  await page.getByRole("button", { name: "Abrir laboratorio educativo" }).click();
   await page.getByRole("tab", { name: "Máquina de Turing", exact: true }).click();
   await expect(page.getByRole("img", { name: "Grafo de la máquina de Turing" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);

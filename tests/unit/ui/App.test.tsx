@@ -30,6 +30,10 @@ describe("App", () => {
     expect(contract()).toHaveTextContent("CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote La Esperanza");
     expect(screen.getByRole("button", { name: "Descargar .md" })).toBeInTheDocument();
 
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Abrir laboratorio educativo" }));
+    expect(screen.getByRole("tabpanel")).toHaveAccessibleName("Árbol de derivación");
+    await user.click(screen.getByRole("tab", { name: "Tokens" }));
     const tokens = screen.getByRole("tabpanel");
     expect(within(tokens).getAllByText("ANIMAL").length).toBeGreaterThan(0);
     await user.click(screen.getByRole("tab", { name: "Pila" }));
@@ -44,6 +48,9 @@ describe("App", () => {
     expect(screen.getByTestId("mt-estado")).toHaveTextContent("q_buscar");
     await user.click(screen.getByRole("button", { name: "Paso" }));
     expect(screen.getByText(/Instantánea 2 de/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cerrar laboratorio educativo" }));
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(contract()).toBeInTheDocument();
   });
 
   it("asks for missing fields and merges the answer", async () => {
