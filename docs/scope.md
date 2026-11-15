@@ -25,7 +25,7 @@ src/core/pipeline.ts runPipeline(texto) → resultado con todas las trazas
 src/core/dialog.ts   guía inicial y preguntas por campos faltantes (§5.6)
 src/ui/              React: entrada voz/texto, tokens, árbol + pila, cinta de la MT, contrato, descarga .md
 tests/               pruebas unitarias, de componentes y Playwright
-docs/                informe con ER, AFN/AFD, gramática, AP y MT (entregable 2) + 3 contratos de demo (entregable 3)
+docs/                especificación, diagramas de autómatas y 3 contratos de ejemplo
 ```
 
 ## Contratos entre módulos (`src/core/types.ts`)
@@ -83,7 +83,7 @@ ejecución tiene `maxSteps`.
 7. **UI**: entrada por voz (botón micrófono, texto reconocido editable antes de generar, §9) o texto; visualización de
    tokens, AFD de un token, árbol de derivación, traza de la pila, cinta de la MT paso a paso (play/pausa/paso), puntajes
    de plantillas, contrato renderizado y descarga `.md`; frases de ejemplo.
-8. **Calidad y entregables**: `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:e2e` en verde;
+8. **Verificación**: `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:e2e` en verde;
    E2E con al menos 3 contratos generados (pastoreo, cultivo, mixta) incluyendo el diálogo de faltantes;
-   `docs/informe.md` con ER, AFN/AFD (de NUM y ANIMAL, generados por el propio código), gramática, AP y MT;
+   `docs/automatas.md` con diagramas generados por el código;
    `docs/contratos-demo/*.md`; `README.md` con cómo instalar, correr y hacer la demo.

@@ -5,12 +5,12 @@
 | Carpeta       | Contenido                                                                                             | Para qué se conserva                                                 |
 | ------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `src/core/`   | Analizador léxico, expresiones regulares, gramática, autómata a pila, máquinas de Turing y plantillas | Es la implementación de los modelos descritos en la propuesta.       |
-| `src/ui/`     | Pantallas, dictado y visualizaciones                                                                  | Permite usar la aplicación y mostrar los procesos en la exposición.  |
+| `src/ui/`     | Pantallas, dictado y visualizaciones                                                                  | Contiene la interfaz de contratos y el laboratorio interactivo.  |
 | `config/`     | Configuración de compilación y herramientas de desarrollo                                             | Centraliza los ajustes técnicos.                                     |
 | `tests/unit/` | Pruebas del núcleo y de los componentes                                                               | Comprueban el análisis, la generación, el dictado y los simuladores. |
 | `tests/e2e/`  | Pruebas con un navegador                                                                              | Verifican el uso completo, las descargas y la vista móvil.           |
 | `scripts/`    | Generación de documentación                                                                           | Produce tablas, trazas y contratos de ejemplo a partir del código.   |
-| `docs/`       | Propuesta, informe, diagramas, ejemplos y capturas                                                    | Reúne el material de apoyo y los entregables de la materia.          |
+| `docs/`       | Especificación, diagramas, ejemplos y capturas                                                    | Describe el comportamiento y muestra salidas del proyecto.          |
 
 Los archivos de prueba están fuera de `src/` para que el código de la aplicación sea más fácil de recorrer.
 
@@ -67,7 +67,7 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-`pnpm format` aplica formato a los archivos. `pnpm docs:generate` actualiza los ejemplos, diagramas y bloques generados del informe. Las pruebas de navegador guardan capturas en `docs/screenshots/` y sus resultados temporales en `test-results/`.
+`pnpm format` aplica formato a los archivos. `pnpm docs:generate` actualiza los ejemplos y diagramas. Las pruebas de navegador guardan capturas en `docs/screenshots/` y sus resultados temporales en `test-results/`.
 
 ## Desplegar en Netlify
 

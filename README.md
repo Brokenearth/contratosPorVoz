@@ -1,95 +1,50 @@
-# Contratos rurales por voz
+# Contratos Rurales por Voz
 
-Proyecto de la materia Lenguajes de Programación que permite redactar contratos de
-arrendamiento rural a partir de una descripción hablada o escrita.
+Aplicación web para preparar borradores de arrendamiento rural en español. Convierte una descripción dictada o escrita en un contrato de pastoreo, cultivo o uso mixto. Permite revisar los datos, resolver dudas de la transcripción y exportar el resultado en PDF o Markdown.
 
-La idea parte de una situación cotidiana en el campo: las condiciones de un arriendo se
-conversan, pero llevar ese acuerdo a un documento puede resultar más complicado. Hay que
-organizar los datos del lote, el uso que se le dará, el tiempo del arriendo y el valor
-acordado. El proyecto busca facilitar ese paso, especialmente para personas que se sienten
-más cómodas hablando que escribiendo o que tienen poca experiencia con herramientas digitales.
+## Uso
 
-Una persona puede describir su acuerdo así:
+1. Escribe o dicta las condiciones del acuerdo. Incluye el lote, la fecha de inicio, el valor total en pesos y el uso.
+2. Revisa los datos reconocidos. Completa los campos obligatorios y confirma los nombres de las partes. Si se detectan términos ambiguos o condiciones que la aplicación no pudo interpretar, corrige el texto y vuelve a analizarlo.
+3. Revisa el borrador y descárgalo en el formato que necesites.
 
-> Arriendo el lote La Esperanza de 5 hectáreas para 20 vacas de raza Holstein,
-> para producción de leche, por 12 meses desde el 15 de noviembre de 2026,
-> por un valor de 6 millones de pesos.
+> Arriendo el lote La Esperanza de 5 hectáreas para 20 vacas de raza Holstein, para producción de leche, por 12 meses desde el 15 de noviembre de 2026, por un valor de 6 millones de pesos.
 
-A partir de esa descripción, el sistema identifica los datos y los organiza en una plantilla
-de contrato. Si falta información, la solicita antes de completar el documento. Se trabajan
-tres tipos de arrendamiento: para pastoreo, para cultivo y mixto.
+El dictado usa el reconocimiento de voz del navegador y requiere permiso para acceder al micrófono. El análisis del texto y la generación del documento se ejecutan en el cliente.
 
-## Relación con la materia
+## Inicio rápido
 
-El proyecto permite seguir un mismo texto por varias etapas y observar qué aporta cada uno
-de los modelos estudiados en clase.
-
-Primero se realiza el análisis léxico. Las expresiones regulares definen las palabras y los
-datos que interesa reconocer, como números, animales, razas o meses. A partir de ellas se
-construyen autómatas finitos que recorren el texto y producen los tokens que recibirá el
-analizador sintáctico.
-
-Después, una gramática libre de contexto y un autómata a pila permiten analizar cómo se
-relacionan esos tokens y extraer los campos del contrato. La pila también sirve para manejar
-grupos anidados, como al mencionar un conjunto de animales y luego precisar cuántos pertenecen
-a un subgrupo. Esto permite mostrar en un caso concreto para qué se necesita recordar
-información durante el análisis.
-
-Finalmente, las máquinas de Turing intervienen en la selección y el llenado de la plantilla.
-Una compara los campos encontrados con los que requiere cada tipo de contrato. La otra
-recorre la plantilla y reemplaza sus marcadores por los datos del acuerdo.
-
-La aplicación muestra estos procesos mediante los tokens, el árbol de derivación, los
-recorridos del AFD, las pilas y la cinta de las máquinas de Turing. Estas vistas permiten
-seguir la ejecución paso a paso durante la explicación del proyecto.
-
-## Uso de la aplicación
-
-La entrada puede hacerse con el micrófono o escribiendo en el cuadro de texto. La transcripción
-utiliza el reconocimiento de voz del navegador; el análisis del texto y los modelos formales
-están implementados en el proyecto.
-
-Los datos se pueden mencionar en distinto orden. Si falta alguno, la aplicación muestra un
-cuadro para cada dato: los obligatorios deben completarse para generar el contrato y los
-opcionales pueden quedar vacíos, en cuyo caso se omite la cláusula correspondiente. Lo escrito
-en cada cuadro pasa por el mismo análisis léxico y sintáctico que el dictado, y se conserva la
-información ya reconocida. También se puede responder con una frase, por voz o por texto. Al
-terminar, el contrato se puede revisar, copiar o descargar en PDF o en Markdown. También hay
-ejemplos de pastoreo, cultivo y arrendamiento mixto para probar el proceso.
-
-## Ejecutar el proyecto
-
-La aplicación está desarrollada con TypeScript, React y Vite. Para ejecutarla se necesita
-Node.js 24 o superior y pnpm 9.
+Requiere Node.js 24 o posterior y pnpm 9.15.9.
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-La aplicación estará disponible en `http://localhost:5173`. Para el dictado por voz se recomienda
-Chrome o Edge, con conexión a internet y permiso para usar el micrófono.
+Vite muestra la dirección local en la terminal. Para preparar una compilación de producción, ejecuta `pnpm build`. El resultado se guarda en `dist/`.
 
-## Documentación
+## Arquitectura
 
-La explicación detallada de la gramática, los autómatas y las máquinas de Turing está en el
-[informe técnico](docs/informe.md). También se pueden consultar los
-[diagramas de los autómatas](docs/automatas.md), la [propuesta del proyecto](docs/propuesta.pdf)
-y los [contratos de ejemplo](docs/contratos-demo/).
+| Módulo | Responsabilidad |
+| --- | --- |
+| `src/core/regex/` y `src/core/lexer/` | Compilan las expresiones regulares a AFN-λ por Thompson y a AFD por subconjuntos. Los AFD reconocen los tokens del contrato. |
+| `src/core/parser/` | Usa una gramática libre de contexto y un autómata a pila para construir el árbol de derivación. La pila comprueba los cierres de grupos anidados. |
+| `src/core/turing/` y `src/core/templates/` | Seleccionan la plantilla a partir de los campos y generan el Markdown mediante dos máquinas de Turing. |
+| `src/ui/` | Presenta el dictado, la revisión, las descargas y el laboratorio de trazas. |
 
-## Organización del repositorio
+El laboratorio de la aplicación permite inspeccionar los tokens, la pila, el árbol y las cintas. Consulta la [especificación técnica](docs/scope.md), los [diagramas de autómatas](docs/automatas.md) y los [contratos de ejemplo](docs/contratos-demo/).
 
-```text
-src/        Código de la aplicación y modelos de la materia
-config/     Configuración de Vite y herramientas de desarrollo
-tests/      Pruebas unitarias y pruebas en navegador
-scripts/    Generación de documentación y ejemplos
-docs/       Propuesta, informe, diagramas y material de apoyo
+## Contribuir
+
+Abre un issue con la entrada exacta, el resultado observado y el esperado. Para proponer un cambio, crea una rama a partir de `main`, incluye las pruebas de regresión y abre un pull request con commits por cambio.
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm exec playwright install chromium
+pnpm test:e2e
 ```
 
-Los archivos necesarios para instalar y desplegar el proyecto permanecen en la raíz.
-La función de cada archivo, los comandos de desarrollo y el despliegue en Netlify
-se explican en la [guía de desarrollo](docs/desarrollo.md).
-
-Para preparar la explicación del código y su relación con la materia, consulta la
-[guía del adelanto](docs/guia-exposicion.md).
+Las pruebas de navegador simulan el reconocimiento de voz. Para regenerar los ejemplos y los diagramas, ejecuta `pnpm docs:generate`. Los detalles de ejecución y despliegue están en la [guía de desarrollo](docs/desarrollo.md).
