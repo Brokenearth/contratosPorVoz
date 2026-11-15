@@ -87,7 +87,8 @@ function analyze(fragment: string, key: string): Analysis {
     return { error: `«${doubt.original}» puede ser ${options}. Escriba la palabra que corresponde.` };
   }
   const parse = parseContract(lex.tokens);
-  if (lex.errors.length > 0 || !parse.ok || parse.warnings.length > 0) {
+  if (!parse.ok && parse.issues[0]) return { error: parse.issues[0] };
+  if (lex.errors.length > 0 || !parse.ok) {
     return { error: `No se reconoció ${fieldQuestion(key)}.` };
   }
   const [invalid] = validateFields(parse.fields);
@@ -96,6 +97,8 @@ function analyze(fragment: string, key: string): Analysis {
   if (outOfScope(parse.fields, key).length > 0) {
     return { error: `Escriba solo ${fieldQuestion(key)}; los demás datos van en su propio cuadro.` };
   }
+  if (parse.issues[0]) return { error: parse.issues[0] };
+  if (parse.warnings.length > 0) return { error: `No se reconoció ${fieldQuestion(key)}.` };
   // The uncorrected fragment is kept so the final pipeline run reports its corrections ("perros" → "cerdos").
   return { fields: parse.fields, text: fragment };
 }
@@ -141,7 +144,12 @@ export function composeFieldAnswers(answers: FieldAnswers, fields: ContractField
   if (area && !lote) errors.hectareas = "Indique primero el lote.";
   else if (area && lote) {
     const candidates = [area, `lote ${lote} de ${area}`, `lote ${lote} de ${area} hectáreas`];
-    if (accept("hectareas", firstAccepted(candidates, "hectareas"))) fragments.delete("lote");
+    const result = firstAccepted(candidates, "hectareas");
+    if ("fields" in result && result.fields.lote !== lote) {
+      errors.hectareas = "El área debe corresponder al lote " + lote + ". Cambie el lote en el texto del contrato.";
+    } else if (accept("hectareas", result)) {
+      fragments.delete("lote");
+    }
   }
 
   if (ANIMAL_KEYS.some((key) => filled.has(key))) composeAnimals(filled, fields, fragments, errors);

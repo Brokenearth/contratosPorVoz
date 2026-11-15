@@ -292,3 +292,75 @@ test("voice: preserves pauses across browser restarts until seven seconds of sil
   await expect(page.getByRole("button", { name: "Dictar por voz" })).toBeVisible();
   await expect(page.getByLabel("Texto del contrato")).toHaveValue("arriendo el lote 20");
 });
+
+
+test("impide descargar cuando el dictado cambia la moneda, el pago, el plazo o el cultivo", async ({ page }) => {
+  const base = "lote 20 para cultivo de maíz desde el 2 de marzo de 2027";
+  const download = page.getByRole("button", { name: "Descargar .md", exact: true });
+  for (const [text, message] of [
+    [base + " valor 2 millones USD", /No se interpretó.*USD.*valor/],
+    [base + " valor 900 mil pesos mensuales por 6 meses", /No se interpretó.*mensuales.*valor/],
+    [base + " valor 900 mil pesos por 1 año y 6 meses", /No se interpretó.*duración/],
+    [base.replace("maíz", "maíz o café") + " valor 900 mil pesos", /No se interpretó.*cultivo/],
+  ] as const) {
+    await analyze(page, text);
+    await expect(page.getByText(message).first()).toBeVisible();
+    await expect(download).toHaveCount(0);
+  }
+  await analyze(page, base + " valor 900 mil pesos por 6 meses");
+  const contract = await downloadContract(page);
+  expect(contract.content).toContain("$ 900.000 pesos por todo el término pactado");
+  expect(contract.content).toContain("duración de 6 meses");
+});
+
+test("pide confirmar el animal antes de descargar", async ({ page }) => {
+  await analyze(page, "lote 20 para 4 perros para ceba desde el 2 de marzo valor 900 mil pesos");
+  const choose = page.getByRole("button", { name: "Confirmar Cerdos" });
+  await expect(choose).toBeVisible();
+  await expect(page.getByRole("button", { name: "Descargar .md", exact: true })).toHaveCount(0);
+  await choose.click();
+  const contract = await downloadContract(page);
+  expect(contract.content).toContain("4 cerdos");
+});
+
+test("el cuadro de área conserva el identificador del lote", async ({ page }) => {
+  await analyze(page, "lote 20 para cultivo de maíz desde el 2 de marzo valor 900 mil pesos");
+  const area = page.getByLabel(/^Área del lote/);
+  await area.fill("lote 99 de 8 fanegadas");
+  await page.getByRole("button", { name: "Agregar al contrato" }).click();
+  await expect(page.getByText(/El área debe corresponder al lote 20/)).toBeVisible();
+  await expect(page.getByRole("article", { name: "Contrato" })).toContainText("lote 20");
+  await area.fill("8 fanegadas");
+  await page.getByRole("button", { name: "Agregar al contrato" }).click();
+  const contract = await downloadContract(page);
+  expect(contract.content).toContain("lote 20, con una extensión de 8 fanegadas");
+  expect(contract.content).not.toContain("lote 99");
+});
+
+test("pide aclarar dos usos antes de descargar, en cualquier orden", async ({ page }) => {
+  for (const uses of ["para ceba y para producción de leche", "para producción de leche y para ceba"]) {
+    await analyze(page, "lote 20 para 4 vacas " + uses + " desde el 2 de marzo valor 900 mil pesos");
+    await expect(page.getByRole("status")).toContainText("el uso del lote");
+    await expect(page.getByRole("button", { name: "Descargar .md", exact: true })).toHaveCount(0);
+  }
+  await analyze(page, "lote 20 para 4 vacas para ceba desde el 2 de marzo valor 900 mil pesos");
+  const result = await downloadContract(page);
+  expect(result.content).toContain("la actividad de ceba");
+});
+
+test("pide aclarar un aporte compartido y separa las obligaciones de los nombres", async ({ page }) => {
+  const base = "lote 20 para cultivo de maíz desde el 2 de marzo de 2027 valor 900 mil pesos";
+  for (const clause of [
+    "el arrendador aporta los insumos y el arrendatario también",
+    "los insumos los aporta el arrendatario y el dueño",
+  ]) {
+    await analyze(page, base + ", " + clause);
+    await expect(page.getByRole("status")).toContainText("quién aporta los insumos");
+    await expect(page.getByRole("button", { name: "Descargar .md", exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Arrendatario", { exact: true })).toHaveValue("");
+  }
+  await analyze(page, base + ", los insumos los aporta el arrendatario, arrendatario nombre Ana Gómez");
+  const result = await downloadContract(page);
+  expect(result.content).toContain("serán aportados por el ARRENDATARIO");
+  expect(result.content.match(/Ana Gómez/g)).toHaveLength(2);
+});

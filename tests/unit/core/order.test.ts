@@ -64,7 +64,7 @@ const CASES: { id: string; name: string; clauses: string[] }[] = [
   {
     id: "MIXTA",
     name: "mixta con sinónimos",
-    clauses: ["se arrienda", "en la parcela llamada El Roble de 10 hectáreas", "unas 15 vacas de raza gir",
+    clauses: ["se arrienda", "en la parcela llamada El Roble de 10 hectáreas", "15 vacas de raza gir",
       "para ganadería de leche", "para cultivo de maíz", "por un plazo de 1 año", "a partir del 1 de marzo de 2027",
       "por un precio de 8.000.000 de pesos", "el dueño suministra los insumos"],
   },
@@ -139,8 +139,8 @@ describe("synonym dictionary", () => {
     expect(el).toMatchObject({ lexeme: "el", synonymOf: "a partir del" });
   });
 
-  it("chains rewrites and drops filler words", () => {
-    const lexemes = tokenize("la finca denominada El Roble con aproximadamente 20 reses").tokens.map((t) => t.lexeme);
+  it("chains rewrites without changing the exact quantity", () => {
+    const lexemes = tokenize("la finca denominada El Roble con 20 reses").tokens.map((t) => t.lexeme);
     expect(lexemes).toEqual(["el", "lote", "El", "Roble", "con", "20", "reses"]);
   });
 

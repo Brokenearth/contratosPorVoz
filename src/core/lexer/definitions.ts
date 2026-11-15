@@ -92,6 +92,15 @@ const NUMBER_WORDS = [
   "dieciocho",
   "diecinueve",
   "veinte",
+  "veintiuno",
+  "veintidós",
+  "veintitrés",
+  "veinticuatro",
+  "veinticinco",
+  "veintiséis",
+  "veintisiete",
+  "veintiocho",
+  "veintinueve",
 ];
 
 export const BREEDS = [

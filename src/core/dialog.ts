@@ -1,4 +1,4 @@
-import type { ContractFields, TemplateDef } from "./types";
+import type { AnimalItem, ContractFields, TemplateDef } from "./types";
 import { normalize } from "./parser/predict";
 
 /** Field declaration of a template (proposal §5.6): the dialog never hardcodes which fields are required. */
@@ -12,7 +12,11 @@ interface FieldInfo {
   isPresent: (fields: ContractFields) => boolean;
 }
 
-const animals = (f: ContractFields) => [...(f.animales ?? []), ...(f.animales ?? []).flatMap((a) => a.sub ?? [])];
+function allAnimals(groups: AnimalItem[]): AnimalItem[] {
+  return groups.flatMap((group) => [group, ...allAnimals(group.sub ?? [])]);
+}
+
+const animals = (fields: ContractFields) => allAnimals(fields.animales ?? []);
 
 /** Known field keys (accents ignored). Unknown keys fall back to the key itself. */
 const FIELDS: Record<string, FieldInfo> = {
@@ -126,6 +130,17 @@ export function validateFields(fields: ContractFields): string[] {
   if (animals(fields).some(({ cantidad }) => cantidad !== undefined && !positive(cantidad))) {
     errors.push("Indique cantidades positivas de animales.");
   }
+  if (animals(fields).some(({ cantidad, sub }) =>
+    cantidad !== undefined && sub && sub.reduce((total, item) => total + (item.cantidad ?? 0), 0) > cantidad,
+  )) {
+    errors.push("Revise la cantidad de animales. Los subgrupos superan el total del grupo al que pertenecen.");
+  }
+  const groups = (fields.animales ?? []).filter((group) => group.cantidad !== undefined);
+  const groupTotal = groups.reduce((total, group) => total + (group.cantidad ?? 0), 0);
+  if (!Number.isSafeInteger(groupTotal)) errors.push("Indique un total de animales representable.");
+  if (new Set(groups.map((group) => JSON.stringify(group))).size < groups.length) {
+    errors.push("Hay grupos de animales repetidos. Indique cada grupo una sola vez.");
+  }
   if (fields.fecha) {
     const { dia, mes, anio } = fields.fecha;
     const leap = anio === undefined || (anio % 4 === 0 && (anio % 100 !== 0 || anio % 400 === 0));
@@ -133,6 +148,8 @@ export function validateFields(fields: ContractFields): string[] {
     const maxDay = monthDays[mes - 1] ?? 0;
     if (!positive(dia) || dia > maxDay || (anio !== undefined && (!positive(anio) || anio > 9999))) {
       errors.push("Indique una fecha válida del calendario.");
+    } else if (anio !== undefined && anio < 1000) {
+      errors.push("Indique el año de la fecha con cuatro cifras.");
     }
   }
   return errors;

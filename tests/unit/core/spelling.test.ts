@@ -41,4 +41,24 @@ describe("contextual spelling repair", () => {
     expect(area.blocked).toBe(true);
     expect(area.suggestions).toEqual([]);
   });
+
+  it.each(["perros", "gatos"])("keeps %s pending before changing the species", (animal) => {
+    const phrase = "lote 20 para 4 " + animal + " para ceba desde el 2 de marzo valor 900 mil pesos";
+    const result = runPipeline(phrase);
+    expect(result.contract).toBeNull();
+    expect(result.analyzedText).toBe(phrase);
+    expect(result.corrections).toEqual([]);
+    if (animal === "perros") expect(result.suggestions[0]?.original).toBe(animal);
+  });
+
+  it("recognizes decomposed accents and keeps original offsets for later suggestions", () => {
+    const input = "lote 20 para cultivo de cafe\u0301 desde el 2 de marzo valor 2 mill de pesos";
+    const result = runPipeline(input);
+    expect(result.lex.errors).toEqual([]);
+    const crop = result.lex.tokens.find((token) => token.type === "CULTIVO");
+    expect(crop?.value).toBe("café");
+    expect(input.slice(crop?.start, crop?.end)).toBe("cafe\u0301");
+    const suggestion = result.suggestions[0];
+    expect(input.slice(suggestion?.start, suggestion?.end)).toBe("mill");
+  });
 });

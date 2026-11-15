@@ -33,4 +33,16 @@ describe("party role relations in the dictation", () => {
     expect(result.fields).toEqual({ insumos: "arrendatario" });
     expect(result.errors).toContainEqual(expect.stringMatching(/arrendador.*Confirme/));
   });
+
+  it.each([
+    ["el arrendador le arriendo lote 20", "arrendador"],
+    ["el arrendador le Juan arriendo lote 20", "arrendador"],
+    ["la arrendataria me arrienda el lote 20", "arrendatario"],
+    ["arrendatario nombre se Ana lote 20", "arrendatario"],
+  ] as const)("asks to review a pronoun before the proposed name (%s)", (input, role) => {
+    const result = runPipeline(input);
+    expect(result.fields[role]).toBeUndefined();
+    expect(result.errors.join(" ")).toMatch(/Confirme el correcto/);
+    expect(result.fields.lote).toBe("20");
+  });
 });

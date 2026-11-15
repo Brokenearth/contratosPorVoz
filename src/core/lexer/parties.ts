@@ -44,7 +44,10 @@ const LINKS = new Set(["a", "de", "como", "se", "va", "voy", "puede", "podria", 
 const TITLES = new Set(["don", "doña", "señor", "señora", "vecino", "vecina", "persona"]);
 const PARTICLES = new Set(["de", "del", "la", "las", "los"]);
 const ALTERNATIVES = new Set(["o", "u", "y", "e"]);
-const PRONOUNS = new Set(["el", "ella", "ellos", "ellas", "yo", "tu", "usted", "alguien", "nadie"]);
+const PRONOUNS = new Set([
+  "el", "ella", "ellos", "ellas", "yo", "tu", "usted", "alguien", "nadie",
+  "me", "te", "se", "le", "les", "nos", "os", "lo",
+]);
 const proper = (token: Token | undefined) =>
   token !== undefined && /^\p{Lu}/u.test(token.lexeme) && token.type !== "PALABRA_CLAVE" &&
   token.type !== "VERBO" && !TITLES.has(word(token));
@@ -92,6 +95,7 @@ function beforeRole(tokens: Token[], roleIndex: number) {
     begin--;
     if (ARTICLES.includes(word(tokens[begin - 1]))) begin--;
   }
+  if (tokens[begin - 1]?.type === "COMA" && word(tokens[begin - 2]) === "yo") begin -= 2;
   return { begin, start, end, negated };
 }
 
@@ -115,7 +119,7 @@ export function groupPartyNames(tokens: Token[], text: string): { tokens: Token[
     const previous = word(tokens[previousIndex]);
     const suppliedBy = previous === "del" && ["cuenta", "cargo"].includes(word(tokens[previousIndex - 1]));
     if (!ROLE_WORDS.includes(word(role)) || SUPPLIER_VERBS.includes(previous) ||
-        suppliedBy || SUPPLIER_VERBS.includes(word(tokens[i + 1]))) {
+        suppliedBy || SUPPLIER_VERBS.includes(word(tokens[i + 1])) || word(tokens[i + 1]) === "tambien") {
       grouped.push(role);
       continue;
     }
@@ -146,7 +150,9 @@ export function groupPartyNames(tokens: Token[], text: string): { tokens: Token[
     }
 
     grouped.push(role);
-    let ambiguous = tokens.slice(after, start).some((token) => word(token) === "no");
+    let ambiguous = tokens.slice(after, start).some((token, index) =>
+      word(token) === "no" || (word(token) === "se" && !IDENTITY_VERBS.has(word(tokens[after + index + 1]))),
+    );
     if (start < end && ["y", "e"].includes(word(tokens[end])) && proper(tokens[end + 1]) &&
         !startsClause(tokens, end + 1)) {
       ambiguous = true;

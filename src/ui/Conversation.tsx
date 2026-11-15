@@ -60,7 +60,7 @@ export function Conversation({ result, onAnswer, onConfirmNames, originalInput, 
       {errors.length > 0 && (
         <details
           className="mt-3 text-xs text-amber-800 dark:text-amber-300"
-          open={errors.some((error) => error.includes("Confirme el correcto en su casilla"))}
+          open={result.blocked || errors.some((error) => error.includes("Confirme el correcto en su casilla"))}
         >
           <summary>{errors.length} aviso(s) del análisis</summary>
           <ul className="list-disc pl-5">

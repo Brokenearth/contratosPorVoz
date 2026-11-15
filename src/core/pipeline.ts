@@ -52,7 +52,7 @@ export function runPipeline(
 ): PipelineResult {
   const { text: analyzedText, lex, corrections, suggestions } = correctTranscription(text);
   const parse = parseContract(lex.tokens);
-  const canMerge = parse.ok && lex.errors.length === 0 && suggestions.length === 0;
+  const canMerge = parse.ok && parse.issues.length === 0 && lex.errors.length === 0 && suggestions.length === 0;
   const fields = mergeFields(previousFields, canMerge ? parse.fields : {});
   const partyWarnings: string[] = [];
   const confirmedNames = options.confirmedNames;
@@ -73,6 +73,7 @@ export function runPipeline(
   const failures = [
     ...(suggestions.length ? ["Confirme la palabra que corresponde a su dictado para continuar."] : []),
     ...lex.errors.map((error) => `${error.message} en la posición ${error.position}.`),
+    ...parse.issues,
     ...parse.errors,
     ...validateFields(fields),
   ];

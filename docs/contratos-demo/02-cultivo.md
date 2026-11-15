@@ -1,10 +1,9 @@
 <!-- Generado por `pnpm docs:generate` a partir de la frase dictada; no editar a mano. -->
-
 > **Frase dictada:** arriendo el lote El Porvenir de 3 hectáreas para cultivo de maíz desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos, los insumos los aporta el arrendatario por 6 meses
 >
 > **Tokens:** [VERBO:arriendo] [PALABRA_CLAVE:el] [PALABRA_CLAVE:lote] [PALABRA_CLAVE:El] [NOMBRE:Porvenir] [PALABRA_CLAVE:de] [NUM:3] [UNIDAD_AREA:hectáreas] [PALABRA_CLAVE:para] [USO:cultivo] [PALABRA_CLAVE:de] [CULTIVO:maíz] [PALABRA_CLAVE:desde] [PALABRA_CLAVE:el] [NUM:1] [PALABRA_CLAVE:de] [MES:diciembre] [PALABRA_CLAVE:de] [NUM:2026] [PALABRA_CLAVE:por] [PALABRA_CLAVE:un] [PALABRA_CLAVE:valor] [PALABRA_CLAVE:de] [NUM:2] [MONEDA:millones] [PALABRA_CLAVE:de] [MONEDA:pesos] [COMA:,] [PALABRA_CLAVE:los] [INSUMOS:insumos] [PALABRA_CLAVE:los] [PALABRA_CLAVE:aporta] [PALABRA_CLAVE:el] [PALABRA_CLAVE:arrendatario] [PALABRA_CLAVE:por] [NUM:6] [UNIDAD_TIEMPO:meses]
 >
-> **Selección (MT):** PASTOREO 6/9 · CULTIVO 7/7 · MIXTA 8/11 → CULTIVO
+> **Selección (MT):** PASTOREO 4/5 · CULTIVO 4/4 · MIXTA 5/6 → CULTIVO
 
 ---
 
@@ -24,7 +23,7 @@ CLÁUSULA SEGUNDA. El ARRENDATARIO podrá destinar el lote El Porvenir (3 hectá
 
 ## Duración
 
-CLÁUSULA TERCERA. El término de duración del presente contrato es de 6 meses, contados a partir del 1 de diciembre de 2026. Si al vencimiento hay una cosecha pendiente, el ARRENDATARIO podrá recogerla dentro de los treinta (30) días siguientes, o el contrato podrá prorrogarse por acuerdo escrito entre las partes.
+CLÁUSULA TERCERA. El arrendamiento comienza el 1 de diciembre de 2026. Tiene una duración de 6 meses. Si al vencimiento hay una cosecha pendiente, el ARRENDATARIO podrá recogerla dentro de los treinta (30) días siguientes, o el contrato podrá prorrogarse por acuerdo escrito entre las partes.
 
 ## Precio y forma de pago
 
@@ -53,5 +52,5 @@ Para constancia se firma en dos ejemplares del mismo tenor.
 | EL ARRENDADOR                  | EL ARRENDATARIO                |
 | ------------------------------ | ------------------------------ |
 | ______________________________ | ______________________________ |
-| ____________________           | ____________________           |
+| ____________________                 | ____________________               |
 | C.C. ____________________      | C.C. ____________________      |

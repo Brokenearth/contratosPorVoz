@@ -1,7 +1,7 @@
 import { type Automaton, type Dfa, compileRegex, longestMatch } from "../regex";
 import type { LexResult, LexStep, Token } from "../types";
 import { NAMED_DEFINITIONS, TOKEN_DEFINITIONS, type TokenDefinition } from "./definitions";
-import { normalize } from "./normalize";
+import { normalizationOffsets, normalize } from "./normalize";
 import { groupPartyNames } from "./parties";
 import { applySynonyms } from "./synonyms";
 
@@ -55,6 +55,7 @@ function bestMatch(text: string, position: number): Candidate | null {
 /** Scans with the DFAs only: normalized text → tokens (with original lexemes and positions) plus a DFA trace. */
 function scan(text: string): LexResult {
   const normalized = normalize(text);
+  const offsets = normalizationOffsets(text, normalized);
   const tokens: Token[] = [];
   const trace: LexStep[] = [];
   const errors: LexResult["errors"] = [];
@@ -66,25 +67,27 @@ function scan(text: string): LexResult {
       position++;
       continue;
     }
+    const start = offsets?.[position] ?? position;
     const match = bestMatch(normalized, position);
     if (match === null) {
-      const lexeme = text.charAt(position);
-      errors.push({ position, lexeme, message: `Símbolo desconocido '${lexeme}'` });
-      trace.push({ position, tokenType: null, dfaStates: [], accepted: false });
+      const lexeme = text.slice(start, offsets?.[position + 1] ?? position + 1);
+      errors.push({ position: start, lexeme, message: `Símbolo desconocido '${lexeme}'` });
+      trace.push({ position: start, tokenType: null, dfaStates: [], accepted: false });
       position++;
       continue;
     }
     const end = position + match.length;
     const { definition } = match.automata;
-    const lexeme = text.slice(position, end);
+    const originalEnd = offsets?.[end] ?? end;
+    const lexeme = text.slice(start, originalEnd);
     tokens.push({
       type: definition.type,
       lexeme,
       value: definition.value(normalized.slice(position, end), lexeme),
-      start: position,
-      end,
+      start,
+      end: originalEnd,
     });
-    trace.push({ position, tokenType: definition.type, dfaStates: match.states, accepted: true });
+    trace.push({ position: start, tokenType: definition.type, dfaStates: match.states, accepted: true });
     position = end;
   }
   return { tokens, trace, errors };
