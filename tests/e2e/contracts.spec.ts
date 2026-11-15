@@ -336,3 +336,31 @@ test("el cuadro de área conserva el identificador del lote", async ({ page }) =
   expect(contract.content).toContain("lote 20, con una extensión de 8 fanegadas");
   expect(contract.content).not.toContain("lote 99");
 });
+
+test("pide aclarar dos usos antes de descargar, en cualquier orden", async ({ page }) => {
+  for (const uses of ["para ceba y para producción de leche", "para producción de leche y para ceba"]) {
+    await analyze(page, "lote 20 para 4 vacas " + uses + " desde el 2 de marzo valor 900 mil pesos");
+    await expect(page.getByRole("status")).toContainText("el uso del lote");
+    await expect(page.getByRole("button", { name: "Descargar .md", exact: true })).toHaveCount(0);
+  }
+  await analyze(page, "lote 20 para 4 vacas para ceba desde el 2 de marzo valor 900 mil pesos");
+  const result = await downloadContract(page);
+  expect(result.content).toContain("la actividad de ceba");
+});
+
+test("pide aclarar un aporte compartido y separa las obligaciones de los nombres", async ({ page }) => {
+  const base = "lote 20 para cultivo de maíz desde el 2 de marzo de 2027 valor 900 mil pesos";
+  for (const clause of [
+    "el arrendador aporta los insumos y el arrendatario también",
+    "los insumos los aporta el arrendatario y el dueño",
+  ]) {
+    await analyze(page, base + ", " + clause);
+    await expect(page.getByRole("status")).toContainText("quién aporta los insumos");
+    await expect(page.getByRole("button", { name: "Descargar .md", exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Arrendatario", { exact: true })).toHaveValue("");
+  }
+  await analyze(page, base + ", los insumos los aporta el arrendatario, arrendatario nombre Ana Gómez");
+  const result = await downloadContract(page);
+  expect(result.content).toContain("serán aportados por el ARRENDATARIO");
+  expect(result.content.match(/Ana Gómez/g)).toHaveLength(2);
+});
