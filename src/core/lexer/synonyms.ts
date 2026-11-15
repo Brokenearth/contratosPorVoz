@@ -49,7 +49,8 @@ export const SYNONYMS: Readonly<Record<string, readonly string[]>> = {
   "los insumos los aporta el arrendatario": [
     "los insumos corren por cuenta del arrendatario", "el arrendatario pone los insumos", "el arrendatario suministra los insumos", "el arrendatario corre con los insumos",
   ],
-  "": ["aproximadamente", "mas o menos", "cerca de", "alrededor de", "unas", "unos"],
+  caña: ["caña de azúcar"],
+  aproximadamente: ["mas o menos", "cerca de", "alrededor de", "unas", "unos"],
 };
 
 interface Rule {

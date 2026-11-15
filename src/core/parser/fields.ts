@@ -65,17 +65,48 @@ function animalItem(itemNode: ParseTree): AnimalItem {
 function amount(monto: ParseTree): { monto: number; moneda: string } {
   const tokens = leaves(monto);
   let value = tokens[0] ? num(tokens[0]) : 0;
-  let currency = "pesos";
   for (const t of tokens.slice(1)) {
     const word = normalize(t.lexeme);
     if (word.startsWith("millon")) value *= 1_000_000;
     else if (word === "mil") value *= 1_000;
-    else currency = text(t);
   }
-  return { monto: value, moneda: currency };
+  return { monto: value, moneda: "pesos" };
 }
 
-function visit(node: ParseTree, fields: ContractFields, conflicts: Map<keyof PartyNames, Set<string>>): void {
+const CLAUSE_LABELS: Readonly<Record<string, string>> = {
+  VALOR: "valor", FECHA: "fecha", DURACION: "duración", LOTE: "lote",
+  ANIMALES: "animales", CULTIVO: "cultivo", INSUMOS: "insumos",
+  USO: "uso del lote", PARTES: "partes",
+};
+
+interface Review {
+  issues: string[];
+  partyConflicts: Map<keyof PartyNames, Set<string>>;
+  lastClause?: string;
+}
+
+function addIssue(review: Review, message: string): void {
+  if (!review.issues.includes(message)) review.issues.push(message);
+}
+
+function visit(node: ParseTree, fields: ContractFields, review: Review): void {
+  if (node.symbol === "CLAUSULA") {
+    const clause = node.children[0];
+    if (clause?.symbol === "descartado" && clause.token) {
+      const where = review.lastClause ? " después de la cláusula de " + review.lastClause : "";
+      addIssue(review, "No se interpretó «" + clause.token.lexeme + "»" + where +
+        ". Corrija el dictado y vuelva a analizarlo.");
+      return;
+    }
+    if (clause && CLAUSE_LABELS[clause.symbol]) review.lastClause = CLAUSE_LABELS[clause.symbol];
+  }
+  const setField = <K extends keyof ContractFields>(key: K, value: ContractFields[K], label: string): void => {
+    const previous = fields[key];
+    if (previous === undefined) fields[key] = value;
+    else if (JSON.stringify(previous) !== JSON.stringify(value)) {
+      addIssue(review, "Hay datos distintos para " + label + ". Corrija el dictado para dejar un solo dato.");
+    }
+  };
   const tokens = leaves(node);
   switch (node.symbol) {
     case "ANIMALES":
@@ -85,31 +116,49 @@ function visit(node: ParseTree, fields: ContractFields, conflicts: Map<keyof Par
       const idTokens = leavesOf(node, "ID");
       const first = idTokens[0];
       if (first) {
-        fields.lote = first.type !== "NUM" ? properName(idTokens)
+        const id = first.type !== "NUM" ? properName(idTokens)
           : /^[0-9]/.test(first.lexeme) ? first.lexeme : String(first.value);
+        setField("lote", id, "el lote");
       }
       const [area, unit] = leavesOf(node, "AREAOPT").filter((token) => token.type !== "PALABRA_CLAVE");
       if (area && unit) {
         const unitName = unit.value;
-        if (unitName === "fanegada" || unitName === "cuadra") fields.areaLocal = { cantidad: num(area), unidad: unitName };
-        else fields.hectareas = num(area);
+        if (unitName === "fanegada" || unitName === "cuadra") {
+          setField("areaLocal", { cantidad: num(area), unidad: unitName }, "el área del lote");
+        } else {
+          setField("hectareas", num(area), "el área del lote");
+        }
+        if (fields.hectareas !== undefined && fields.areaLocal) {
+          addIssue(review, "Hay dos unidades para el área del lote. Indique una sola extensión.");
+        }
       }
       return;
     }
     case "VALOR": {
       const monto = child(node, "MONTO");
-      if (monto) fields.valor = amount(monto);
+      if (monto) {
+        const words = leaves(monto).slice(1).map((token) => normalize(token.lexeme));
+        // The grammar recognizes currency tokens. Their order still has to describe a single total.
+        const units = words.join(" ").replace(/^de /, "");
+        if (!/^(?:(?:mil|millon(?:es)?)(?: (?:de )?pesos?)?|pesos?|mil millones(?: de pesos?| pesos?)?)$/.test(units)) {
+          addIssue(review, "Indique un solo valor total en pesos, por ejemplo «900 mil pesos».");
+        } else {
+          setField("valor", amount(monto), "el valor");
+        }
+      }
       return;
     }
     case "FECHA": {
       const nums = tokens.filter((t) => t.type === "NUM");
       const mes = tokens.find((t) => t.type === "MES");
-      if (nums[0] && mes) fields.fecha = { dia: num(nums[0]), mes: month(mes) };
-      if (fields.fecha && nums[1]) fields.fecha.anio = num(nums[1]);
+      if (nums[0] && mes) {
+        const date = { dia: num(nums[0]), mes: month(mes) };
+        setField("fecha", nums[1] ? { ...date, anio: num(nums[1]) } : date, "la fecha de inicio");
+      }
       return;
     }
     case "DURACION":
-      if (tokens[1] && tokens[2]) fields.duracion = { cantidad: num(tokens[1]), unidad: text(tokens[2]) };
+      if (tokens[1] && tokens[2]) setField("duracion", { cantidad: num(tokens[1]), unidad: text(tokens[2]) }, "la duración");
       return;
     case "USO": {
       const uso = tokens.filter((t) => t.type === "USO").map(text).join(" de ");
@@ -120,12 +169,12 @@ function visit(node: ParseTree, fields: ContractFields, conflicts: Map<keyof Par
     }
     case "CULTIVO": {
       const crop = tokens[tokens.length - 1];
-      if (crop) fields.cultivo = String(crop.value);
+      if (crop) setField("cultivo", String(crop.value), "el cultivo");
       return;
     }
     case "INSUMOS": {
       const role = leavesOf(node, "ROL")[0];
-      if (role) fields.insumos = normalize(role.lexeme);
+      if (role) setField("insumos", normalize(role.lexeme), "quién aporta los insumos");
       return;
     }
     case "PARTES": {
@@ -133,23 +182,23 @@ function visit(node: ParseTree, fields: ContractFields, conflicts: Map<keyof Par
       const tail = leavesOf(node, "ROLTAIL");
       if (!role || tail.length === 0) return;
       const who = normalize(role.lexeme);
-      if (tail[0] && normalize(tail[0].lexeme) === "aporta") fields.insumos = who;
+      if (tail[0] && normalize(tail[0].lexeme) === "aporta") setField("insumos", who, "quién aporta los insumos");
       else {
         const name = normalizePartyName(tail.filter((token) => token.type === "NOMBRE").map((token) => token.lexeme).join(" "));
         if (!name) return;
         const key = who === "arrendador" ? "arrendador" : "arrendatario";
-        const conflict = conflicts.get(key);
+        const conflict = review.partyConflicts.get(key);
         const previous = fields[key];
         if (conflict) conflict.add(name);
         else if (previous && previous !== name) {
-          conflicts.set(key, new Set([previous, name]));
+          review.partyConflicts.set(key, new Set([previous, name]));
           delete fields[key];
         } else fields[key] = name;
       }
       return;
     }
     default:
-      for (const c of node.children) visit(c, fields, conflicts);
+      for (const c of node.children) visit(c, fields, review);
   }
 }
 
@@ -157,11 +206,11 @@ function visit(node: ParseTree, fields: ContractFields, conflicts: Map<keyof Par
 // Materia: extracción semántica después del análisis sintáctico.
 // Se recorre el árbol de derivación para dar significado a los tokens:
 // el NUM dentro de LOTE identifica el predio; el NUM de ITEM cuenta animales.
-export function extractFields(tree: ParseTree | null, warnings: string[] = []): ContractFields {
+export function extractFields(tree: ParseTree | null, warnings: string[] = [], issues: string[] = []): ContractFields {
   const fields: ContractFields = {};
-  const conflicts = new Map<keyof PartyNames, Set<string>>();
-  if (tree) visit(tree, fields, conflicts);
-  for (const [role, names] of conflicts) {
+  const review: Review = { issues, partyConflicts: new Map() };
+  if (tree) visit(tree, fields, review);
+  for (const [role, names] of review.partyConflicts) {
     warnings.push(`Hay varios nombres para ${role}: ${[...names].join(", ")}. Confirme el correcto en su casilla.`);
   }
   return fields;

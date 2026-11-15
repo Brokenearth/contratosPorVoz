@@ -92,6 +92,7 @@ function beforeRole(tokens: Token[], roleIndex: number) {
     begin--;
     if (ARTICLES.includes(word(tokens[begin - 1]))) begin--;
   }
+  if (tokens[begin - 1]?.type === "COMA" && word(tokens[begin - 2]) === "yo") begin -= 2;
   return { begin, start, end, negated };
 }
 

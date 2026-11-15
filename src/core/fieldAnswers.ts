@@ -87,7 +87,8 @@ function analyze(fragment: string, key: string): Analysis {
     return { error: `«${doubt.original}» puede ser ${options}. Escriba la palabra que corresponde.` };
   }
   const parse = parseContract(lex.tokens);
-  if (lex.errors.length > 0 || !parse.ok || parse.warnings.length > 0) {
+  if (!parse.ok && parse.issues[0]) return { error: parse.issues[0] };
+  if (lex.errors.length > 0 || !parse.ok) {
     return { error: `No se reconoció ${fieldQuestion(key)}.` };
   }
   const [invalid] = validateFields(parse.fields);
@@ -96,6 +97,8 @@ function analyze(fragment: string, key: string): Analysis {
   if (outOfScope(parse.fields, key).length > 0) {
     return { error: `Escriba solo ${fieldQuestion(key)}; los demás datos van en su propio cuadro.` };
   }
+  if (parse.issues[0]) return { error: parse.issues[0] };
+  if (parse.warnings.length > 0) return { error: `No se reconoció ${fieldQuestion(key)}.` };
   // The uncorrected fragment is kept so the final pipeline run reports its corrections ("perros" → "cerdos").
   return { fields: parse.fields, text: fragment };
 }
