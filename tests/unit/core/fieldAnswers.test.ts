@@ -98,4 +98,21 @@ describe("individual boxes for missing fields", () => {
       expect.objectContaining({ original: "holste", value: "holstein" }),
     ]);
   });
+
+  it.each(["lote 99 de 8 fanegadas", "lote 20 de 3 hectáreas lote 99"])("protects the lot from its area box (%s)", (area) => {
+    const { text, errors } = composeFieldAnswers({ hectareas: area }, cultivo.fields);
+    expect(errors.hectareas).toMatch(/lote/i);
+    expect(text).toBe("");
+  });
+
+  it("keeps the lot typed in its own box and accepts its area when identifiers match", () => {
+    const unexpected = composeFieldAnswers({ lote: "21", hectareas: "lote 99 de 8 fanegadas" }, {});
+    expect(unexpected.errors.hectareas).toMatch(/lote/i);
+    expect(unexpected.text).toBe("lote 21");
+
+    const { text, errors } = composeFieldAnswers({ hectareas: "lote 20 de 8 fanegadas" }, cultivo.fields);
+    expect(errors).toEqual({});
+    const result = runPipeline(text, cultivo.fields);
+    expect(result.fields).toMatchObject({ lote: "20", areaLocal: { cantidad: 8, unidad: "fanegada" } });
+  });
 });

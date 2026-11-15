@@ -144,7 +144,12 @@ export function composeFieldAnswers(answers: FieldAnswers, fields: ContractField
   if (area && !lote) errors.hectareas = "Indique primero el lote.";
   else if (area && lote) {
     const candidates = [area, `lote ${lote} de ${area}`, `lote ${lote} de ${area} hectáreas`];
-    if (accept("hectareas", firstAccepted(candidates, "hectareas"))) fragments.delete("lote");
+    const result = firstAccepted(candidates, "hectareas");
+    if ("fields" in result && result.fields.lote !== lote) {
+      errors.hectareas = "El área debe corresponder al lote " + lote + ". Cambie el lote en el texto del contrato.";
+    } else if (accept("hectareas", result)) {
+      fragments.delete("lote");
+    }
   }
 
   if (ANIMAL_KEYS.some((key) => filled.has(key))) composeAnimals(filled, fields, fragments, errors);
