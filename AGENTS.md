@@ -2,11 +2,6 @@
 
 ## Cuenta de GitHub para publicar
 
-- Si el usuario pide «sube los cambios a mi GitHub» sin indicar una cuenta, usar
-  **Albertovillarraga1309**, a la que se refiere como **avillarraga**.
-- Si el usuario dice «GitHub Brokenearth», «mi GitHub Brokenearth» o indica
-  explícitamente **Brokenearth**, el destino es **Brokenearth**. Para este
-  proyecto, el repositorio es `Brokenearth/contratosPorVoz`.
 - Cuando se especifique la cuenta que debe publicar, la identidad autenticada
   debe coincidir con ella; elegir un repositorio de ese propietario desde otra
   cuenta no satisface la instrucción. Respetar las restricciones de cuenta
