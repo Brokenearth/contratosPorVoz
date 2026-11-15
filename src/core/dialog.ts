@@ -77,6 +77,11 @@ function infoOf(key: string): FieldInfo | undefined {
   return FIELDS[normalize(key)];
 }
 
+/** Phrase that names one field, e.g. "la fecha"; unknown keys fall back to the key itself. */
+export function fieldQuestion(key: string): string {
+  return infoOf(key)?.question ?? key;
+}
+
 /** "a", "a y b", "a, b y c". */
 function joinSpanish(parts: string[]): string {
   if (parts.length <= 1) return parts.join("");

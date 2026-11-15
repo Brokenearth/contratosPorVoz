@@ -49,10 +49,13 @@ La entrada puede hacerse con el micrófono o escribiendo en el cuadro de texto. 
 utiliza el reconocimiento de voz del navegador; el análisis del texto y los modelos formales
 están implementados en el proyecto.
 
-Los datos se pueden mencionar en distinto orden. Si hace falta alguno, se responde a la
-pregunta del sistema y se conserva la información que ya se había reconocido. Al terminar,
-el contrato se puede revisar, copiar o descargar en Markdown. También hay ejemplos de
-pastoreo, cultivo y arrendamiento mixto para probar el proceso.
+Los datos se pueden mencionar en distinto orden. Si falta alguno, la aplicación muestra un
+cuadro para cada dato: los obligatorios deben completarse para generar el contrato y los
+opcionales pueden quedar vacíos, en cuyo caso se omite la cláusula correspondiente. Lo escrito
+en cada cuadro pasa por el mismo análisis léxico y sintáctico que el dictado, y se conserva la
+información ya reconocida. También se puede responder con una frase, por voz o por texto. Al
+terminar, el contrato se puede revisar, copiar o descargar en PDF o en Markdown. También hay
+ejemplos de pastoreo, cultivo y arrendamiento mixto para probar el proceso.
 
 ## Ejecutar el proyecto
 

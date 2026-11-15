@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { TemplateDef } from "../core/types";
+import { contractPdfName, downloadContractPdf } from "./contractPdf";
 import { Icon } from "./Icon";
 import { Markdown, headingId, parseBlocks } from "./Markdown";
 import { Panel } from "./Panel";
@@ -24,6 +25,7 @@ function download(markdown: string, name: string) {
 export function ContractPanel({ markdown, template, previous = false }: Props) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const [pdfState, setPdfState] = useState<"idle" | "working" | "error">("idle");
   const pending = (markdown.match(/\{\{[^}]+\}\}/g) ?? []).length;
   const sections = parseBlocks(markdown).filter((b) => b.kind === "heading" && b.level === 2);
   async function copy() {
@@ -36,6 +38,15 @@ export function ContractPanel({ markdown, template, previous = false }: Props) {
       setCopyError(true);
     }
   }
+  async function downloadPdf() {
+    setPdfState("working");
+    try {
+      await downloadContractPdf(markdown, template.title, contractPdfName(contractFileName(template)));
+      setPdfState("idle");
+    } catch {
+      setPdfState("error");
+    }
+  }
   return (
     <Panel
       title={previous ? "Borrador anterior" : pending > 0 ? "Borrador incompleto" : "Contrato generado"}
@@ -44,7 +55,11 @@ export function ContractPanel({ markdown, template, previous = false }: Props) {
     >
       {previous && <p className="pending-note">El último turno no generó un documento nuevo.</p>}
       <div className="document-actions">
-        <button type="button" className="btn-primary" onClick={() => download(markdown, contractFileName(template))}>
+        <button type="button" className="btn-primary" onClick={() => void downloadPdf()} disabled={pdfState === "working"}>
+          <Icon name="download" />
+          {pdfState === "working" ? "Preparando PDF…" : "Descargar PDF"}
+        </button>
+        <button type="button" className="btn-secondary" onClick={() => download(markdown, contractFileName(template))}>
           <Icon name="download" />
           Descargar .md
         </button>
@@ -53,6 +68,11 @@ export function ContractPanel({ markdown, template, previous = false }: Props) {
           {copied ? "Copiado" : "Copiar"}
         </button>
       </div>
+      {pdfState === "error" && (
+        <p role="alert" className="field-error">
+          No se pudo generar el PDF. Puede descargar el documento en .md.
+        </p>
+      )}
       {copyError && (
         <p role="alert" className="field-error">
           No se pudo copiar. Puede descargar el documento.

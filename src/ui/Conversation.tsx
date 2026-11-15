@@ -2,40 +2,25 @@ import { useState } from "react";
 import type { PipelineResult } from "../core/pipeline";
 import type { PartyNames } from "../core/types";
 import { DictationField } from "./DictationField";
+import { FIELD_LABELS as LABELS } from "./fieldLabels";
+import { MissingFields } from "./MissingFields";
 import { Panel } from "./Panel";
 import { PartyReview } from "./PartyReview";
 import type { InputSource } from "./voice";
 
-const LABELS: Record<string, string> = {
-  lote: "Lote",
-  hectareas: "Área del lote",
-  tipo_animal: "Tipo de animal",
-  cantidad_animales: "Cantidad de animales",
-  raza: "Raza",
-  fecha: "Fecha de inicio",
-  uso: "Uso del lote",
-  duracion: "Duración",
-  valor: "Valor",
-  cultivo: "Cultivo",
-  insumos: "Quién aporta los insumos",
-  arrendador: "Arrendador",
-  arrendatario: "Arrendatario",
-};
-
 interface Props {
   result: PipelineResult;
   onAnswer: (answer: string) => void;
-  onForce: () => void;
   onConfirmNames: (names: PartyNames) => void;
   originalInput?: string;
   onCorrect: (start: number, end: number, value: string) => void;
   source?: InputSource;
 }
 
-export function Conversation({ result, onAnswer, onForce, onConfirmNames, originalInput, onCorrect, source }: Props) {
+export function Conversation({ result, onAnswer, onConfirmNames, originalInput, onCorrect, source }: Props) {
   const [answer, setAnswer] = useState("");
   const [listening, setListening] = useState(false);
-  const { template, missing, question, contract, blocked, errors } = result;
+  const { template, missing, missingOptional, question, contract, errors } = result;
   const complete = contract !== null && missing.length === 0;
 
   function submit() {
@@ -120,32 +105,35 @@ export function Conversation({ result, onAnswer, onForce, onConfirmNames, origin
           descargarlo.
         </p>
       ) : (
-        <div className="mt-4 space-y-3">
-          <p role="status" className="pending-note">
-            {question}
-          </p>
-          <DictationField
-            id="respuesta"
-            label="Su respuesta"
-            rows={2}
-            value={answer}
-            onChange={setAnswer}
-            placeholder="Ej.: desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos"
-            source={source}
-            onListeningChange={setListening}
-          />
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn-primary" onClick={submit} disabled={!answer.trim() || listening}>
-              Responder
-            </button>
-            {template && !contract && !blocked && (
-              <button type="button" className="btn-secondary" onClick={onForce} disabled={listening}>
-                Generar de todos modos
-              </button>
-            )}
-          </div>
-        </div>
+        <p role="status" className="pending-note mt-4">
+          {question}
+        </p>
       )}
+      {template && (
+        <MissingFields
+          required={complete ? [] : missing}
+          optional={missingOptional}
+          fields={result.fields}
+          onSubmit={onAnswer}
+          disabled={listening}
+        />
+      )}
+      <div className="mt-4 space-y-3">
+        {template && <p className="text-sm">También puede responder con una frase, por voz o por texto.</p>}
+        <DictationField
+          id="respuesta"
+          label="Su respuesta"
+          rows={2}
+          value={answer}
+          onChange={setAnswer}
+          placeholder="Ej.: desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos"
+          source={source}
+          onListeningChange={setListening}
+        />
+        <button type="button" className="btn-secondary" onClick={submit} disabled={!answer.trim() || listening}>
+          Responder
+        </button>
+      </div>
     </Panel>
   );
 }
