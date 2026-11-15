@@ -116,4 +116,25 @@ describe("revisión de datos del contrato", () => {
     const result = runPipeline("valor 800 mil pesos", fields);
     expect(result.contract?.output).toContain("$ 800.000 pesos");
   });
+
+  it.each([
+    "para ceba y para producción de leche",
+    "para producción de leche y para ceba",
+  ])("pide aclarar dos usos sin elegir según el orden (%s)", (uses) => {
+    expectReview("lote 20 para 4 vacas " + uses + " desde el 2 de marzo valor 900 mil pesos", /uso del lote/i);
+  });
+
+  it("acepta usos equivalentes repetidos y conserva el uso ganadero junto al cultivo", () => {
+    const clauses = ["para ceba", "para engorde", "para cultivo de maíz"];
+    const outputs = [clauses, [...clauses].reverse()].map((parts) =>
+      runPipeline("lote 20 para 4 vacas " + parts.join(" y ") + " desde el 2 de marzo valor 900 mil pesos"),
+    );
+    for (const result of outputs) {
+      expect(result.errors).toEqual([]);
+      expect(result.template?.id).toBe("MIXTA");
+      expect(result.fields.uso).toBe("ceba");
+      expect(result.contract?.accepted).toBe(true);
+    }
+    expect(outputs[0]?.contract?.output).toBe(outputs[1]?.contract?.output);
+  });
 });

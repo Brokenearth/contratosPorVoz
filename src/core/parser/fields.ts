@@ -164,7 +164,14 @@ function visit(node: ParseTree, fields: ContractFields, review: Review): void {
       const uso = tokens.filter((t) => t.type === "USO").map(text).join(" de ");
       // In a mixed dictation ("para ganadería de leche y para cultivo de maíz") the crop use must not
       // replace the livestock use: the crop itself goes to `cultivo`.
-      if (fields.uso === undefined || !CROP_USES.includes(normalize(uso))) fields.uso = uso;
+      const current = fields.uso;
+      const isCropUse = CROP_USES.includes(normalize(uso));
+      const currentIsCropUse = current !== undefined && CROP_USES.includes(normalize(current));
+      if (current === undefined || (currentIsCropUse && !isCropUse)) {
+        fields.uso = uso;
+      } else if (currentIsCropUse === isCropUse && normalize(current) !== normalize(uso)) {
+        setField("uso", uso, "el uso del lote");
+      }
       return;
     }
     case "CULTIVO": {
