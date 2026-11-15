@@ -119,7 +119,7 @@ export function groupPartyNames(tokens: Token[], text: string): { tokens: Token[
     const previous = word(tokens[previousIndex]);
     const suppliedBy = previous === "del" && ["cuenta", "cargo"].includes(word(tokens[previousIndex - 1]));
     if (!ROLE_WORDS.includes(word(role)) || SUPPLIER_VERBS.includes(previous) ||
-        suppliedBy || SUPPLIER_VERBS.includes(word(tokens[i + 1]))) {
+        suppliedBy || SUPPLIER_VERBS.includes(word(tokens[i + 1])) || word(tokens[i + 1]) === "tambien") {
       grouped.push(role);
       continue;
     }

@@ -15,7 +15,7 @@ export function normalize(text: string): string {
 export function matches(token: Token | undefined, symbol: string): boolean {
   if (token === undefined) return false;
   if (symbol === "*") return true;
-  if (isKeyword(symbol)) return normalize(token.lexeme) === normalize(symbol.slice(1, -1));
+  if (isKeyword(symbol)) return !token.partyName && normalize(token.lexeme) === normalize(symbol.slice(1, -1));
   return token.type.toLowerCase() === symbol;
 }
 
@@ -76,7 +76,8 @@ export const PREDICT: Record<string, Row[]> = {
   USOTAIL: [row(0, '"de"', "uso")],
   CULTPREF: [row(0, '"para"'), row(1, '"de"')],
   ROL: [row(0, '"arrendador"'), row(1, '"arrendatario"')],
-  ROLTAIL: [row(0, '"aporta"'), row(1, '"nombre"'), row(2, "nombre")],
+  ROLTAIL: [row(0, '"aporta"'), row(1, '"nombre"'), row(3, '"tambien"'), row(2, "nombre")],
+  APORTEOPT: [row(0, '"aporta"')],
   PARTNAME: [row(0, "nombre")],
   ART: [row(0, '"el"'), row(1, '"la"'), row(2, '"los"'), row(3, '"las"')],
   VERBO: [row(0, "verbo"), row(1, '"se"')],

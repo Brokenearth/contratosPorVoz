@@ -83,22 +83,37 @@ interface Review {
   issues: string[];
   partyConflicts: Map<keyof PartyNames, Set<string>>;
   lastClause?: string;
+  afterSupply: boolean;
 }
 
 function addIssue(review: Review, message: string): void {
   if (!review.issues.includes(message)) review.issues.push(message);
 }
 
-function visit(node: ParseTree, fields: ContractFields, review: Review): void {
+function recordSupplier(fields: ContractFields, review: Review, role: string): void {
+  if (fields.insumos !== undefined && fields.insumos !== role) {
+    addIssue(review, "Aclare quién aporta los insumos. Esta plantilla admite un solo responsable.");
+  } else {
+    fields.insumos = role;
+  }
+  review.afterSupply = true;
+}
+
+function visit(node: ParseTree, fields: ContractFields, review: Review, followsSupply = false): void {
   if (node.symbol === "CLAUSULA") {
     const clause = node.children[0];
-    if (clause?.symbol === "descartado" && clause.token) {
+    if (!clause || clause.symbol === "SEP") return;
+    const continuesSupply = review.afterSupply;
+    review.afterSupply = false;
+    if (clause.symbol === "descartado" && clause.token) {
       const where = review.lastClause ? " después de la cláusula de " + review.lastClause : "";
       addIssue(review, "No se interpretó «" + clause.token.lexeme + "»" + where +
         ". Corrija el dictado y vuelva a analizarlo.");
       return;
     }
-    if (clause && CLAUSE_LABELS[clause.symbol]) review.lastClause = CLAUSE_LABELS[clause.symbol];
+    if (CLAUSE_LABELS[clause.symbol]) review.lastClause = CLAUSE_LABELS[clause.symbol];
+    visit(clause, fields, review, continuesSupply);
+    return;
   }
   const setField = <K extends keyof ContractFields>(key: K, value: ContractFields[K], label: string): void => {
     const previous = fields[key];
@@ -181,16 +196,24 @@ function visit(node: ParseTree, fields: ContractFields, review: Review): void {
     }
     case "INSUMOS": {
       const role = leavesOf(node, "ROL")[0];
-      if (role) setField("insumos", normalize(role.lexeme), "quién aporta los insumos");
+      if (role) recordSupplier(fields, review, normalize(role.lexeme));
       return;
     }
     case "PARTES": {
       const role = leavesOf(node, "ROL")[0];
       const tail = leavesOf(node, "ROLTAIL");
-      if (!role || tail.length === 0) return;
+      if (!role) return;
       const who = normalize(role.lexeme);
-      if (tail[0] && normalize(tail[0].lexeme) === "aporta") setField("insumos", who, "quién aporta los insumos");
-      else {
+      const marker = tail[0]?.partyName ? "" : normalize(tail[0]?.lexeme ?? "");
+      if (tail.length === 0 || marker === "tambien") {
+        const explicitSupply = normalize(tail[1]?.lexeme ?? "") === "aporta";
+        if (followsSupply || explicitSupply) recordSupplier(fields, review, who);
+        else if (marker === "tambien") {
+          addIssue(review, "Aclare a qué obligación se refiere «también» o indique el nombre de la parte.");
+        }
+      } else if (marker === "aporta") {
+        recordSupplier(fields, review, who);
+      } else {
         const name = normalizePartyName(tail.filter((token) => token.type === "NOMBRE").map((token) => token.lexeme).join(" "));
         if (!name) return;
         const key = who === "arrendador" ? "arrendador" : "arrendatario";
@@ -215,7 +238,7 @@ function visit(node: ParseTree, fields: ContractFields, review: Review): void {
 // el NUM dentro de LOTE identifica el predio; el NUM de ITEM cuenta animales.
 export function extractFields(tree: ParseTree | null, warnings: string[] = [], issues: string[] = []): ContractFields {
   const fields: ContractFields = {};
-  const review: Review = { issues, partyConflicts: new Map() };
+  const review: Review = { issues, partyConflicts: new Map(), afterSupply: false };
   if (tree) visit(tree, fields, review);
   for (const [role, names] of review.partyConflicts) {
     warnings.push(`Hay varios nombres para ${role}: ${[...names].join(", ")}. Confirme el correcto en su casilla.`);
