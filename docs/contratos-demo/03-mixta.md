@@ -1,10 +1,9 @@
 <!-- Generado por `pnpm docs:generate` a partir de la frase dictada; no editar a mano. -->
-
 > **Frase dictada:** arriendo el lote 4 de 10 hectáreas para 15 vacas de raza gir para ganadería de leche y para cultivo de maíz por 1 año desde el 1 de marzo de 2027 por un valor de 8 millones de pesos, los insumos los aporta el arrendador
 >
 > **Tokens:** [VERBO:arriendo] [PALABRA_CLAVE:el] [PALABRA_CLAVE:lote] [NUM:4] [PALABRA_CLAVE:de] [NUM:10] [UNIDAD_AREA:hectáreas] [PALABRA_CLAVE:para] [NUM:15] [ANIMAL:vacas] [PALABRA_CLAVE:de] [PALABRA_CLAVE:raza] [RAZA:gir] [PALABRA_CLAVE:para] [USO:ganadería] [PALABRA_CLAVE:de] [USO:leche] [CONECTOR:y] [PALABRA_CLAVE:para] [USO:cultivo] [PALABRA_CLAVE:de] [CULTIVO:maíz] [PALABRA_CLAVE:por] [NUM:1] [UNIDAD_TIEMPO:año] [PALABRA_CLAVE:desde] [PALABRA_CLAVE:el] [NUM:1] [PALABRA_CLAVE:de] [MES:marzo] [PALABRA_CLAVE:de] [NUM:2027] [PALABRA_CLAVE:por] [PALABRA_CLAVE:un] [PALABRA_CLAVE:valor] [PALABRA_CLAVE:de] [NUM:8] [MONEDA:millones] [PALABRA_CLAVE:de] [MONEDA:pesos] [COMA:,] [PALABRA_CLAVE:los] [INSUMOS:insumos] [PALABRA_CLAVE:los] [PALABRA_CLAVE:aporta] [PALABRA_CLAVE:el] [PALABRA_CLAVE:arrendador]
 >
-> **Selección (MT):** PASTOREO 9/9 · CULTIVO 7/7 · MIXTA 11/11 → MIXTA
+> **Selección (MT):** PASTOREO 5/5 · CULTIVO 4/4 · MIXTA 6/6 → MIXTA
 
 ---
 
@@ -24,7 +23,7 @@ CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote 4 (10 hectáreas) 
 
 ## Duración
 
-CLÁUSULA TERCERA. El término de duración del presente contrato es de 1 año, contados a partir del 1 de marzo de 2027. Si al vencimiento hay una cosecha pendiente, el ARRENDATARIO podrá recogerla dentro de los treinta (30) días siguientes, o el contrato podrá prorrogarse por acuerdo escrito entre las partes.
+CLÁUSULA TERCERA. El arrendamiento comienza el 1 de marzo de 2027. Tiene una duración de 1 año. Si al vencimiento hay una cosecha pendiente, el ARRENDATARIO podrá recogerla dentro de los treinta (30) días siguientes, o el contrato podrá prorrogarse por acuerdo escrito entre las partes.
 
 ## Precio y forma de pago
 
@@ -36,7 +35,7 @@ CLÁUSULA QUINTA. Son obligaciones del ARRENDADOR: a) entregar el lote en buen e
 
 ## Obligaciones del ARRENDATARIO
 
-CLÁUSULA SEXTA. Son obligaciones del ARRENDATARIO: a) pagar el canon en la forma y fechas pactadas; b) no exceder la cantidad de animales autorizada y mantenerlos separados del área cultivada; c) mantener los animales vacunados y al día con los registros sanitarios exigidos por la autoridad competente; d) usar buenas prácticas agrícolas y manejar los agroquímicos según la normativa vigente; e) no subarrendar ni ceder el contrato sin autorización escrita; f) restituir el lote al terminar el contrato en el estado en que lo recibió, salvo el deterioro normal por el uso.
+CLÁUSULA SEXTA. Son obligaciones del ARRENDATARIO: a) pagar el canon en la forma y fechas pactadas; b) no exceder la cantidad de animales autorizada y mantener los animales separados del área cultivada; c) mantener los animales vacunados y al día con los registros sanitarios exigidos por la autoridad competente; d) usar buenas prácticas agrícolas y manejar los agroquímicos según la normativa vigente; e) no subarrendar ni ceder el contrato sin autorización escrita; f) restituir el lote al terminar el contrato en el estado en que lo recibió, salvo el deterioro normal por el uso.
 
 ## Terminación
 
@@ -53,5 +52,5 @@ Para constancia se firma en dos ejemplares del mismo tenor.
 | EL ARRENDADOR                  | EL ARRENDATARIO                |
 | ------------------------------ | ------------------------------ |
 | ______________________________ | ______________________________ |
-| ____________________           | ____________________           |
+| ____________________                 | ____________________               |
 | C.C. ____________________      | C.C. ____________________      |

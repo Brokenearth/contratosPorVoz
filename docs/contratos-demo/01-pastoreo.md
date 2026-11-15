@@ -1,10 +1,9 @@
 <!-- Generado por `pnpm docs:generate` a partir de la frase dictada; no editar a mano. -->
-
 > **Frase dictada:** arriendo lote La Esperanza de 5 hectáreas para 20 vacas de raza holstein para producción de leche por 12 meses desde el 15 de noviembre de 2026 por un valor de 6 millones de pesos
 >
 > **Tokens:** [VERBO:arriendo] [PALABRA_CLAVE:lote] [PALABRA_CLAVE:La] [NOMBRE:Esperanza] [PALABRA_CLAVE:de] [NUM:5] [UNIDAD_AREA:hectáreas] [PALABRA_CLAVE:para] [NUM:20] [ANIMAL:vacas] [PALABRA_CLAVE:de] [PALABRA_CLAVE:raza] [RAZA:holstein] [PALABRA_CLAVE:para] [USO:producción] [PALABRA_CLAVE:de] [USO:leche] [PALABRA_CLAVE:por] [NUM:12] [UNIDAD_TIEMPO:meses] [PALABRA_CLAVE:desde] [PALABRA_CLAVE:el] [NUM:15] [PALABRA_CLAVE:de] [MES:noviembre] [PALABRA_CLAVE:de] [NUM:2026] [PALABRA_CLAVE:por] [PALABRA_CLAVE:un] [PALABRA_CLAVE:valor] [PALABRA_CLAVE:de] [NUM:6] [MONEDA:millones] [PALABRA_CLAVE:de] [MONEDA:pesos]
 >
-> **Selección (MT):** PASTOREO 9/9 · CULTIVO 5/7 · MIXTA 9/11 → PASTOREO
+> **Selección (MT):** PASTOREO 5/5 · CULTIVO 3/4 · MIXTA 5/6 → PASTOREO
 
 ---
 
@@ -20,11 +19,11 @@ CLÁUSULA PRIMERA. El ARRENDADOR entrega a título de arrendamiento al ARRENDATA
 
 ## Destinación
 
-CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote La Esperanza (5 hectáreas) un máximo de 20 vacas de raza Holstein, destinadas exclusivamente a la producción de leche, durante 12 meses. No podrá ingresar un número mayor de animales ni darle al lote un uso distinto sin autorización escrita del ARRENDADOR.
+CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote La Esperanza (5 hectáreas) un máximo de 20 vacas de raza Holstein, destinadas exclusivamente a la producción de leche, durante 12 meses. No podrá ingresar un número mayor de animales. No podrá darle al lote un uso distinto sin autorización escrita del ARRENDADOR.
 
 ## Duración
 
-CLÁUSULA TERCERA. El término de duración del presente contrato es de 12 meses, contados a partir del 15 de noviembre de 2026. Al vencimiento, el contrato podrá prorrogarse por acuerdo escrito entre las partes.
+CLÁUSULA TERCERA. El arrendamiento comienza el 15 de noviembre de 2026. Tiene una duración de 12 meses. Al vencimiento, el contrato podrá prorrogarse por acuerdo escrito entre las partes.
 
 ## Precio y forma de pago
 
@@ -36,7 +35,7 @@ CLÁUSULA QUINTA. Son obligaciones del ARRENDADOR: a) entregar el lote en buen e
 
 ## Obligaciones del ARRENDATARIO
 
-CLÁUSULA SEXTA. Son obligaciones del ARRENDATARIO: a) pagar el canon en la forma y fechas pactadas; b) no exceder la cantidad de animales autorizada ni sobrepastorear el lote; c) mantener los animales vacunados y al día con los registros sanitarios exigidos por la autoridad competente; d) conservar las cercas, pastos, árboles y fuentes de agua; e) no subarrendar ni ceder el contrato sin autorización escrita; f) restituir el lote al terminar el contrato en el estado en que lo recibió, salvo el deterioro normal por el uso.
+CLÁUSULA SEXTA. Son obligaciones del ARRENDATARIO: a) pagar el canon en la forma y fechas pactadas; b) no exceder la cantidad de animales autorizada y evitar el sobrepastoreo del lote; c) mantener los animales vacunados y al día con los registros sanitarios exigidos por la autoridad competente; d) conservar las cercas, pastos, árboles y fuentes de agua; e) no subarrendar ni ceder el contrato sin autorización escrita; f) restituir el lote al terminar el contrato en el estado en que lo recibió, salvo el deterioro normal por el uso.
 
 ## Terminación
 
@@ -53,5 +52,5 @@ Para constancia se firma en dos ejemplares del mismo tenor.
 | EL ARRENDADOR                  | EL ARRENDATARIO                |
 | ------------------------------ | ------------------------------ |
 | ______________________________ | ______________________________ |
-| ____________________           | ____________________           |
+| ____________________                 | ____________________               |
 | C.C. ____________________      | C.C. ____________________      |
