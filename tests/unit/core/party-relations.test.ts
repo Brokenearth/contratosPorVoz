@@ -33,4 +33,12 @@ describe("party role relations in the dictation", () => {
     expect(result.fields).toEqual({ insumos: "arrendatario" });
     expect(result.errors).toContainEqual(expect.stringMatching(/arrendador.*Confirme/));
   });
+
+  it("does not take a clitic after the role as the name", () => {
+    const result = runPipeline(
+      "yo Pedro Pérez arrendador le arriendo a María Gómez arrendataria el lote 5 para cultivo de café",
+    );
+    expect(result.fields.arrendador).toBeUndefined();
+    expect(result.errors).toContainEqual(expect.stringMatching(/arrendador.*Confirme/));
+  });
 });

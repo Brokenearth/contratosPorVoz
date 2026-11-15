@@ -45,6 +45,10 @@ const TITLES = new Set(["don", "doña", "señor", "señora", "vecino", "vecina",
 const PARTICLES = new Set(["de", "del", "la", "las", "los"]);
 const ALTERNATIVES = new Set(["o", "u", "y", "e"]);
 const PRONOUNS = new Set(["el", "ella", "ellos", "ellas", "yo", "tu", "usted", "alguien", "nadie"]);
+/** Clitics and link words are never a name by themselves ("el arrendador le arriendo…"). */
+const FUNCTION_WORDS = new Set([
+  ...PRONOUNS, ...ARTICLES, "le", "les", "lo", "me", "te", "se", "nos", "a", "al", "de", "del", "que", "quien",
+]);
 const proper = (token: Token | undefined) =>
   token !== undefined && /^\p{Lu}/u.test(token.lexeme) && token.type !== "PALABRA_CLAVE" &&
   token.type !== "VERBO" && !TITLES.has(word(token));
@@ -53,7 +57,8 @@ function nameToken(tokens: Token[], start: number, end: number, text: string): T
   const first = tokens[start];
   const last = tokens[end - 1];
   if (!first || !last || start >= end || PRONOUNS.has(word(first)) ||
-      tokens.slice(start, end).some((token) => ALTERNATIVES.has(word(token)) || word(token) === "no")) return undefined;
+      tokens.slice(start, end).some((token) => ALTERNATIVES.has(word(token)) || word(token) === "no") ||
+      tokens.slice(start, end).every((token) => FUNCTION_WORDS.has(word(token)))) return undefined;
   const name = text.slice(first.start, last.end);
   return normalizePartyName(name)
     ? { type: "NOMBRE", lexeme: name, value: name, start: first.start, end: last.end, partyName: true }
