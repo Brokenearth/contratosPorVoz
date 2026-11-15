@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { guideText, mergeFields, missingFields, questionFor } from "../../../src/core/dialog";
+import { guideText, mergeFields, missingFields, questionFor, validateFields } from "../../../src/core/dialog";
 import { parseContract } from "../../../src/core/parser";
 import { tokens } from "../../helpers/tokens";
 
@@ -46,5 +46,17 @@ describe("dialog (§5.6)", () => {
 
   it("keeps previous values that the new answer does not mention", () => {
     expect(mergeFields({ lote: "1", uso: "pastoreo" }, { uso: "ceba" })).toEqual({ lote: "1", uso: "ceba" });
+  });
+});
+
+describe("totales de animales", () => {
+  it("impide que el total de dos grupos se redondee al escribir el contrato", () => {
+    const animales = [{ animal: "vacas", cantidad: Number.MAX_SAFE_INTEGER }, { animal: "toros", cantidad: 2 }];
+    expect(validateFields({ animales })).toContain("Indique un total de animales representable.");
+  });
+
+  it("acepta un total que todavía se puede representar exactamente", () => {
+    const animales = [{ animal: "vacas", cantidad: Number.MAX_SAFE_INTEGER - 2 }, { animal: "toros", cantidad: 2 }];
+    expect(validateFields({ animales })).toEqual([]);
   });
 });

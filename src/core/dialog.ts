@@ -136,6 +136,8 @@ export function validateFields(fields: ContractFields): string[] {
     errors.push("Revise la cantidad de animales. Los subgrupos superan el total del grupo al que pertenecen.");
   }
   const groups = (fields.animales ?? []).filter((group) => group.cantidad !== undefined);
+  const groupTotal = groups.reduce((total, group) => total + (group.cantidad ?? 0), 0);
+  if (!Number.isSafeInteger(groupTotal)) errors.push("Indique un total de animales representable.");
   if (new Set(groups.map((group) => JSON.stringify(group))).size < groups.length) {
     errors.push("Hay grupos de animales repetidos. Indique cada grupo una sola vez.");
   }
