@@ -8,6 +8,7 @@ export interface TranscriptionSuggestion {
   start: number;
   end: number;
   candidates: { value: string; distance: number }[];
+  requiresConfirmation?: true;
 }
 
 export function levenshtein(left: string, right: string): number {
@@ -29,6 +30,8 @@ export function levenshtein(left: string, right: string): number {
 const word = (token: Token | undefined) => normalize(token?.lexeme ?? "");
 const NON_ANIMAL_COUNTS = new Set(["lote", "valor", "por", "de", "el", "al", "desde", "hasta"]);
 const MULTIPLIERS = new Set(["mil", "millon"]);
+// These are recognizable species outside the supported livestock vocabulary.
+const OTHER_ANIMALS = new Set(["perro", "perros", "perra", "perras", "gato", "gatos", "gata", "gatas"]);
 
 function amountPosition(tokens: Token[], index: number): boolean {
   const amount = word(tokens[index - 1]) === "de" ? index - 2 : index - 1;
@@ -57,7 +60,7 @@ function suggestionsFor(tokens: Token[]): TranscriptionSuggestion[] {
     const expected = expectedTypes(tokens, index);
     if (!expected.length) return [];
     const threshold = source.length < 6 ? 1 : source.length < 11 ? 2 : 3;
-    const meanings = new Map<string, { value: string; distance: number }>();
+    const meanings = new Map<string, { value: string; distance: number; type: TokenType }>();
     for (const definition of TOKEN_DEFINITIONS) {
       if (!expected.includes(definition.type)) continue;
       for (const entry of definition.spellings ?? []) {
@@ -68,14 +71,20 @@ function suggestionsFor(tokens: Token[]): TranscriptionSuggestion[] {
         if (distance === 0 || distance > radius) continue;
         const key = definition.type + ":" + entry.meaning;
         const current = meanings.get(key);
-        if (!current || distance < current.distance) meanings.set(key, { value: entry.value, distance });
+        if (!current || distance < current.distance) meanings.set(key, { value: entry.value, distance, type: definition.type });
       }
     }
     const ranked = [...meanings.values()].sort((a, b) => a.distance - b.distance);
     const best = ranked[0];
     if (!best || best.distance > threshold) return [];
-    const candidates = ranked.filter(({ distance }) => distance <= best.distance + 1);
-    return [{ original: token.lexeme, start: token.start, end: token.end, candidates }];
+    const candidates = ranked.filter(({ distance }) => distance <= best.distance + 1)
+      .map(({ value, distance }) => ({ value, distance }));
+    const requiresConfirmation = best.type === "ANIMAL" &&
+      (OTHER_ANIMALS.has(source) || (best.distance > 1 && source.slice(0, 2) !== normalize(best.value).slice(0, 2)));
+    return [{
+      original: token.lexeme, start: token.start, end: token.end, candidates,
+      ...(requiresConfirmation ? { requiresConfirmation: true } : {}),
+    }];
   });
 }
 
@@ -92,7 +101,7 @@ export function correctTranscription(input: string) {
   const corrections: AppliedCorrection[] = [];
 
   for (let pass = 0; pass < 3; pass++) {
-    const clear = suggestions.filter(({ candidates }) => candidates.length === 1);
+    const clear = suggestions.filter(({ candidates, requiresConfirmation }) => candidates.length === 1 && !requiresConfirmation);
     if (clear.length === 0) break;
     for (const item of clear) corrections.push({ original: item.original, value: item.candidates[0]!.value });
     for (const item of clear.sort((a, b) => b.start - a.start)) {
