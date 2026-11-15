@@ -88,7 +88,7 @@ const symbol = tape[head] ?? BLANK;
 const transition = machine.delta(state, symbol);
 ~~~
 
-El motor aplica `transition.write`, cambia al estado siguiente y mueve el cabezal. En el llenado, `q_buscar` detecta `{{`, `q_leer` reconoce el nombre del marcador, `q_borrar` vuelve hacia la izquierda y `q_escribir` escribe el valor. Las secciones `[[?campo]] … [[/campo]]` aparecen si tienen datos. Una fecha requerida sin dato conserva `{{fecha}}` y el archivo avisa que es un borrador incompleto. Solo un llenado aceptado se ofrece como nueva descarga. Un fallo de análisis o de llenado deja disponible la traza y, si ya existía un documento, la interfaz lo etiqueta **Borrador anterior**.
+El motor aplica `transition.write`, cambia al estado siguiente y mueve el cabezal. En el llenado, `q_buscar` detecta `{{`, `q_leer` reconoce el nombre del marcador, `q_borrar` vuelve hacia la izquierda y `q_escribir` escribe el valor. Las secciones `[[?campo]] … [[/campo]]` aparecen si tienen datos. Si se ejecuta la máquina sin una fecha requerida, conserva `{{fecha}}` y el archivo avisa que es un borrador incompleto; el generador de documentación usa ese caso, pero la interfaz no genera el contrato mientras falte un dato obligatorio. Solo un llenado aceptado se ofrece como nueva descarga, en PDF ([src/ui/contractPdf.ts](../src/ui/contractPdf.ts), que convierte los bloques del Markdown con pdfmake) o en Markdown. Un fallo de análisis o de llenado deja disponible la traza y, si ya existía un documento, la interfaz lo etiqueta **Borrador anterior**.
 
 **Límite de la formalización.** Los dos controles usan estados parametrizados y símbolos compuestos. El llenado recibe un mapa de valores y la selección hace aritmética con los conteos en su control al escribir el veredicto. Para defender una MT clásica uniforme se necesita fijar Q y Γ, codificar datos en la cinta y descomponer la comparación y copia en transiciones elementales. Las trazas que se muestran son del motor usado para generar el resultado.
 
@@ -102,7 +102,7 @@ El diálogo lee los requeridos del encabezado de cada plantilla. La fecha admite
 | Cultivo | Lote, cultivo, fecha, valor | Área, insumos y duración aparecen si se indican |
 | Mixta | Lote, tipo de animal, fecha, uso ganadero, cultivo, valor | Área, cantidad, raza, insumos y duración aparecen si se indican. La descripción de lista es derivada |
 
-Con campos requeridos pendientes, se puede generar un borrador marcado como incompleto cuando la plantilla está identificada y el análisis es válido. El caso con datos requeridos completos mantiene la salida para revisión. El alcance es el borrador académico de la propuesta.
+Con campos requeridos pendientes, el contrato no se genera. La revisión muestra un cuadro por cada dato que falta, obligatorio u opcional ([src/ui/MissingFields.tsx](../src/ui/MissingFields.tsx)). [src/core/fieldAnswers.ts](../src/core/fieldAnswers.ts), `composeFieldAnswers`, convierte cada cuadro en una cláusula de la gramática: prueba primero el texto escrito y, si el AP no lo acepta, antepone la palabra que abre la cláusula («desde el», «por un valor de», «lote»). Cada cláusula pasa por los AFD y el AP; si sobra o falta una palabra, el error aparece en su cuadro. Las cláusulas aceptadas forman una respuesta que vuelve a recorrer el pipeline completo. Los opcionales vacíos no bloquean: la MT de llenado borra su sección `[[?campo]] … [[/campo]]`. El alcance es el borrador académico de la propuesta.
 
 ## Vocabulario y sugerencias
 

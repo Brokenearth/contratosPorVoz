@@ -1560,3 +1560,78 @@ section,
     max-height: 780px;
   }
 }
+
+.missing-fields {
+  margin-top: 16px;
+  display: grid;
+  gap: 16px;
+}
+.missing-fields fieldset {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 14px;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+.missing-fields legend {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 6px;
+}
+.missing-fields fieldset > p {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.missing-field {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-width: 0;
+}
+.missing-field label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.missing-field label .field-state {
+  margin-right: 0;
+  font-weight: 400;
+}
+.missing-field input,
+.missing-field select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.missing-field input[aria-invalid="true"],
+.missing-field select[aria-invalid="true"] {
+  border-color: #c7967a;
+  background: #fbefe7;
+}
+.missing-field .field-error {
+  margin-top: 0;
+}
+.field-state.is-optional {
+  background: #eef0ea;
+  color: var(--muted);
+}
+.missing-fields > button {
+  justify-self: start;
+}
+@media (max-width: 480px) {
+  .missing-fields fieldset {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,4 +1,5 @@
 import { mergeFields, missingFields, questionFor, validateFields } from "./dialog";
+import { missingOptional } from "./fieldAnswers";
 import { correctTranscription, type AppliedCorrection, type TranscriptionSuggestion } from "./lexer/similarity";
 import { parseContract, type ParseOutcome } from "./parser";
 import { normalizePartyName, PARTY_ROLES } from "./partyNames";
@@ -22,6 +23,8 @@ export interface PipelineResult {
   template: TemplateDef | null;
   /** Required fields of the selected template that are still missing. */
   missing: string[];
+  /** Optional fields of the selected template that can still be added in their own boxes. */
+  missingOptional: string[];
   /** Question for the user (§5.6); "" when nothing is missing. */
   question: string;
   /** Fill-machine run; null until the required fields are complete (or `force`). */
@@ -65,6 +68,7 @@ export function runPipeline(
   const selection = selectTemplate(extractedFieldNames(fields), TEMPLATES, { requireDomain: true });
   const template = selection.templateId === null ? null : getTemplate(selection.templateId);
   const missing = template ? missingFields(fields, template.required) : [];
+  const optionalPending = template ? missingOptional(fields, template) : [];
   const missingQuestion = questionFor(missing);
   const failures = [
     ...(suggestions.length ? ["Confirme la palabra que corresponde a su dictado para continuar."] : []),
@@ -81,7 +85,7 @@ export function runPipeline(
   const question = failures[0] ?? (template ? missingQuestion : NO_TEMPLATE_QUESTION);
   const errors = [...failures, ...(lex.warnings ?? []), ...parse.warnings, ...partyWarnings];
   return {
-    lex, parse, fields, confirmedNames, selection, template, missing, question, contract, fill, blocked,
+    lex, parse, fields, confirmedNames, selection, template, missing, missingOptional: optionalPending, question, contract, fill, blocked,
     errors, analyzedText, corrections, suggestions,
   };
 }

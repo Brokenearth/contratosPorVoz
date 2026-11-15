@@ -19,6 +19,7 @@
     "format": "prettier --config config/prettier.json --write src tests config scripts README.md docs/*.md"
   },
   "dependencies": {
+    "pdfmake": "0.3.11",
     "react": "^19",
     "react-dom": "^19"
   },
@@ -30,6 +31,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
+    "@types/pdfmake": "0.3.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5",

@@ -29,6 +29,7 @@ describe("App", () => {
     expect(screen.getByText(/Todos los campos requeridos están completos/)).toBeInTheDocument();
     expect(contract()).toHaveTextContent("CLÁUSULA SEGUNDA. El ARRENDATARIO podrá mantener en el lote La Esperanza");
     expect(screen.getByRole("button", { name: "Descargar .md" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
 
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Abrir laboratorio educativo" }));
@@ -75,17 +76,36 @@ describe("App", () => {
     expect(contract()).not.toHaveTextContent("{{");
   });
 
-  it("generates anyway with pending markers highlighted", async () => {
+  it("blocks the contract until the required boxes are filled; optional boxes can stay empty", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.type(
-      screen.getByLabelText("Texto del contrato"),
-      "arriendo lote La Esperanza para 20 vacas de raza holstein",
-    );
+    await user.type(screen.getByLabelText("Texto del contrato"), "arriendo lote La Esperanza para 20 vacas de raza holstein");
     await user.click(screen.getByRole("button", { name: "Analizar" }));
-    await user.click(screen.getByRole("button", { name: "Generar de todos modos" }));
-    expect(contract().querySelectorAll("mark[data-pending]").length).toBeGreaterThan(0);
-    expect(contract()).toHaveTextContent("{{valor}}");
+    expect(screen.queryByRole("button", { name: "Generar de todos modos" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "Contrato" })).not.toBeInTheDocument();
+
+    const boxes = screen.getByRole("form", { name: "Datos por completar" });
+    expect(within(boxes).getByRole("group", { name: "Datos obligatorios que faltan" })).toHaveTextContent("Fecha de inicio");
+    expect(within(boxes).getByRole("group", { name: "Datos opcionales" })).toHaveTextContent("Duración");
+    await user.type(screen.getByLabelText(/^Fecha de inicio/), "31 de febrero de 2027");
+    await user.type(screen.getByLabelText(/^Uso del lote/), "producción de leche");
+    await user.type(screen.getByLabelText(/^Valor/), "6 millones");
+    await user.click(screen.getByRole("button", { name: "Completar datos" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Indique una fecha válida del calendario.");
+    expect(screen.queryByRole("article", { name: "Contrato" })).not.toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText(/^Fecha de inicio/));
+    await user.type(screen.getByLabelText(/^Fecha de inicio/), "15 de noviembre de 2026");
+    await user.click(screen.getByRole("button", { name: "Completar datos" }));
+    expect(contract()).toHaveTextContent("$ 6.000.000 pesos");
+    expect(contract()).not.toHaveTextContent("{{");
+    expect(contract()).not.toHaveTextContent("durante 12 meses");
+    expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^Duración/), "12 meses");
+    await user.click(screen.getByRole("button", { name: "Agregar al contrato" }));
+    expect(contract()).toHaveTextContent("durante 12 meses");
+    expect(screen.queryByLabelText(/^Duración/)).not.toBeInTheDocument();
   });
 
   it("puts dictated text in the editable textarea", async () => {

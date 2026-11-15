@@ -93,7 +93,6 @@ export function App({ source }: { source?: InputSource }) {
                 result={result}
                 source={source}
                 onAnswer={(answer) => analyze(answer, result.fields, { confirmedNames: analysis.options.confirmedNames }, true)}
-                onForce={() => analyze(analysis.input, analysis.previous, { ...analysis.options, force: true }, true, analysis.originalInput)}
                 onConfirmNames={(confirmedNames) =>
                   analyze(analysis.input, analysis.previous, { ...analysis.options, confirmedNames }, true, analysis.originalInput)
                 }

@@ -48,7 +48,6 @@ test("cultivo: missing-fields dialog, answer completes and downloads", async ({ 
   );
   await expect(page.getByText("Falta la fecha y el valor del arrendamiento.")).toBeVisible();
   await expect(page.getByRole("article", { name: "Contrato" })).toHaveCount(0);
-  await page.screenshot({ path: `${SCREENSHOTS}/02-faltantes.png`, fullPage: true });
 
   await page.getByLabel("Su respuesta").fill("desde el 1 de diciembre de 2026 por un valor de 2 millones de pesos");
   await page.getByRole("button", { name: "Responder" }).click();
@@ -89,13 +88,33 @@ test("mixta: generates and downloads, theory panels and Turing machine", async (
   await page.getByRole("tabpanel").screenshot({ path: `${SCREENSHOTS}/04-automata.png` });
 });
 
-test("generate anyway leaves pending markers", async ({ page }) => {
+test("missing fields: one box per field, then the contract downloads as PDF", async ({ page }) => {
   await analyze(page, "arriendo lote La Esperanza para 20 vacas de raza holstein");
-  await page.getByRole("button", { name: "Generar de todos modos" }).click();
+  await expect(page.getByRole("button", { name: "Generar de todos modos" })).toHaveCount(0);
+  const boxes = page.getByRole("form", { name: "Datos por completar" });
+  await expect(boxes.getByRole("group", { name: "Datos obligatorios que faltan" })).toBeVisible();
+  await page.getByLabel(/^Fecha de inicio/).fill("15 de noviembre de 2026");
+  await page.getByLabel(/^Uso del lote/).fill("producción de leche");
+  await page.getByLabel(/^Valor/).fill("6 millones");
+  await page.getByLabel(/^Área del lote/).fill("5");
+  await page.screenshot({ path: `${SCREENSHOTS}/02-faltantes.png`, fullPage: true });
+  await page.getByRole("button", { name: "Completar datos" }).click();
+
   const contract = page.getByRole("article", { name: "Contrato" });
-  await expect(contract.locator("mark[data-pending]").first()).toBeVisible();
-  const file = await downloadContract(page);
-  expect(file.content).toContain("{{valor}}");
+  await expect(contract).toContainText("en el lote La Esperanza (5 hectáreas) un máximo de 20 vacas de raza Holstein");
+  await expect(contract).toContainText("$ 6.000.000 pesos");
+  await expect(contract.locator("mark[data-pending]")).toHaveCount(0);
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Descargar PDF" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("contrato-pastoreo.pdf");
+  const chunks: Buffer[] = [];
+  for await (const chunk of await download.createReadStream()) chunks.push(Buffer.from(chunk as Buffer));
+  const pdf = Buffer.concat(chunks);
+  expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+  expect(pdf.length).toBeGreaterThan(10_000);
 });
 
 for (const [kind, use] of [
@@ -159,10 +178,9 @@ test("repairs clear words and asks about ambiguous alternatives before generatin
 });
 
 test("a rejected answer keeps the previous draft and shows the cause", async ({ page }) => {
-  await analyze(page, "lote 20 para cultivo de maíz");
-  await page.getByRole("button", { name: "Generar de todos modos" }).click();
+  await page.getByRole("button", { name: "Cultivo (maíz)" }).click();
+  await page.getByRole("button", { name: "Analizar" }).click();
   const first = await downloadContract(page);
-  expect(first.content).toContain("Borrador incompleto");
   await page.getByLabel("Su respuesta").fill("fin");
   await page.getByRole("button", { name: "Responder" }).click();
   await expect(page.getByRole("heading", { name: "Borrador anterior" })).toBeVisible();
